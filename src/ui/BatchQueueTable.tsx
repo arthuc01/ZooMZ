@@ -24,12 +24,14 @@ export default function BatchQueueTable({ spectra, results, selectedId, onSelect
           {spectra.map((s) => {
             const r = results[s.id];
             const top = r?.rankedTaxa?.[0];
+            const corr = top?.correlation;
+            const corrText = Number.isFinite(corr) ? corr.toFixed(3) : "-";
             const active = selectedId === s.id;
             return (
               <tr key={s.id} onClick={() => onSelect(s.id)} style={{ cursor: "pointer", background: active ? "#f3f4f6" : undefined }}>
                 <td>{s.filename}</td>
                 <td>{top ? top.taxonLabel : "-"}</td>
-                <td>{top ? top.correlation.toFixed(3) : "-"}</td>
+                <td>{corrText}</td>
               </tr>
             );
           })}

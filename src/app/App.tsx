@@ -101,7 +101,7 @@ export default function App() {
     }
   }
 
-  function runAnalysis(ids?: string[]) {
+  async function runAnalysis(ids?: string[]) {
     if (!db) return;
     setError(null);
     setBusy(true);
@@ -111,8 +111,19 @@ export default function App() {
         : (selectedSpectrum ? [selectedSpectrum] : []);
 
       const next: Record<string, AnalysisResult> = {};
-      for (const s of targets) next[s.id] = analyzeSpectrum(s, db, contaminants, params);
+      const errors: string[] = [];
+      await new Promise(resolve => setTimeout(resolve, 0));
+      for (let i = 0; i < targets.length; i++) {
+        const s = targets[i];
+        try {
+          next[s.id] = analyzeSpectrum(s, db, contaminants, params);
+        } catch (e: any) {
+          errors.push(`${s.filename}: ${String(e?.message ?? e)}`);
+        }
+        if (i % 5 === 4) await new Promise(resolve => setTimeout(resolve, 0));
+      }
       setResults(prev => ({ ...prev, ...next }));
+      if (errors.length) setError(`Batch completed with ${errors.length} error(s). First: ${errors[0]}`);
     } catch (e: any) {
       setError(String(e?.message ?? e));
     } finally {
@@ -127,16 +138,21 @@ export default function App() {
   function exportSelected() {
     if (!selectedSpectrum || !selectedResult || !inspectTaxonId) return;
     const rows = selectedResult.taxonMatchesTop[inspectTaxonId] ?? [];
+    const csvEscape = (value: string) => {
+      const needsQuotes = /[",\r\n]/.test(value);
+      const escaped = value.replace(/"/g, '""');
+      return needsQuotes ? `"${escaped}"` : escaped;
+    };
     const csv = [
       ["markerName","expectedMz","matched","matchedPeakMz","matchedPeakIntensity"].join(","),
       ...rows.map(r => [
-        JSON.stringify(r.markerName),
+        csvEscape(r.markerName),
         r.expectedMz.toFixed(6),
         r.matched ? "1" : "0",
         r.matchedPeakMz === null ? "" : r.matchedPeakMz.toFixed(6),
         r.matchedPeakIntensity === null ? "" : String(r.matchedPeakIntensity)
       ].join(","))
-    ].join("\n");
+    ].join("\r\n");
 
     downloadText(selectedSpectrum.filename.replace(/\.(mzml|mzxml)$/i, "") + "_marker_matches.csv", csv, "text/csv");
   }
