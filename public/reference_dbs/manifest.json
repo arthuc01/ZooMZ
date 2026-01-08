@@ -1,0 +1,34 @@
+{
+  "defaultDb": "Mammals_reference_Africa.csv",
+  "databases": [
+    {
+      "label": "Amphibians",
+      "file": "Amphibians_reference_db.csv"
+    },
+    {
+      "label": "Birds",
+      "file": "Bird_reference_db.csv"
+    },
+    {
+      "label": "Fish",
+      "file": "Fish_reference_db_1.csv"
+    },
+    {
+      "label": "Mammals - Africa",
+      "file": "Mammals_reference_Africa.csv"
+    },
+    {
+      "label": "Mammals - Eurasia",
+      "file": "Mammals_reference_Eurasia.csv"
+    },
+    {
+      "label": "Mammals - New World",
+      "file": "Mammals_reference_new_world.csv"
+    },
+    {
+      "label": "Reptiles",
+      "file": "Reptiles_reference_db.csv"
+    }
+  ],
+  "contaminantsFile": "contaminants_list.csv"
+}
