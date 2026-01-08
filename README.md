@@ -1,6 +1,8 @@
-# ZooMS Browser MVP (React + Plotly) — Speciescan-style DBs
+# ZooMS Browser MVP (React + Plotly) 
 
-This MVP supports:
+Zooarchaeology by mass spectrometry, commonly referred to by the abbreviation ZooMS, is a scientific method that identifies animal species by means of characteristic peptide sequences in the protein collagen.
+
+This app supports:
 
 - Upload `.mzML` / `.mzXML` files (batch)
 - Interactive Plotly spectrum (zoom/pan)
