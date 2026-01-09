@@ -76,7 +76,10 @@ function parseMzML(xmlText: string): { mz: Float64Array; intensity: Float64Array
   const intensity = decodeBinary(intB64, intType, intCompressed);
 
   const n = Math.min(mz.length, intensity.length);
-  return { mz: mz.slice(0, n), intensity: intensity.slice(0, n) };
+  return {
+    mz: new Float64Array(mz.subarray(0, n)),
+    intensity: new Float64Array(intensity.subarray(0, n))
+  };
 }
 
 function parseMzXML(xmlText: string): { mz: Float64Array; intensity: Float64Array } {

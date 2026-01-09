@@ -1,9 +1,12 @@
-export function cropSpectrum(mz: Float64Array, intensity: Float64Array, mzMin: number, mzMax: number) {
+export function cropSpectrum(mz: Float64Array, intensity: Float64Array, mzMin: number, mzMax: number): { mz: Float64Array; intensity: Float64Array } {
   let start = 0;
   while (start < mz.length && mz[start] < mzMin) start++;
   let end = start;
   while (end < mz.length && mz[end] <= mzMax) end++;
-  return { mz: mz.slice(start, end), intensity: intensity.slice(start, end) };
+  return {
+    mz: new Float64Array(mz.subarray(start, end)),
+    intensity: new Float64Array(intensity.subarray(start, end))
+  };
 }
 
 export function normalizeToMax(intensity: Float64Array): Float64Array {
