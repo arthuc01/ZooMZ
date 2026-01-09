@@ -16,6 +16,8 @@ This app supports:
 
 ## Run
 
+This app can be access and run on Github Pages [https://arthuc01.github.io/ZooMZ/](https://arthuc01.github.io/ZooMZ/)
+
 ```bash
 npm install
 npm run dev
