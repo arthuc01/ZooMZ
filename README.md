@@ -16,6 +16,12 @@ This app supports:
 - Confidence labels (High/Medium/Low) in results tables
 - Note: expected input files are single-scan MALDI MS (multi-scan mzML is not supported)
 
+FDR confidence thresholds used in the app:
+- High confidence: qSample <= 0.01
+- Medium confidence: qSample <= 0.05
+- Low confidence: qSample > 0.05
+- Decoy gap is the difference between the top real score and the best decoy score; larger gaps indicate stronger separation, while zero/negative gaps suggest weak confidence.
+
 ## Run
 
 This app is hosted on Github Pages [https://arthuc01.github.io/ZooMZ/](https://arthuc01.github.io/ZooMZ/)
