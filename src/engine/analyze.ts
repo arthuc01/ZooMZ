@@ -1,10 +1,16 @@
-import type { AnalysisParams, AnalysisResult, Contaminant, SpeciescanDb, Spectrum } from "./types";
+import type { AnalysisParams, AnalysisResult, Contaminant, RefTaxon, SpeciescanDb, Spectrum } from "./types";
 import { cropSpectrum, normalizeToMax } from "./preprocess";
 import { keepMonoisotopicPeaks, pickPeaks } from "./peakPicking";
-import { markerMatchesForTaxon, matchContaminants, scoreTaxa } from "./speciescanScoring";
+import { buildSampleVector, buildTaxonVector, markerMatchesForTaxon, matchContaminants, pearsonCorrelationBinary, scoreTaxa } from "./speciescanScoring";
 
 // Run preprocessing, peak picking, and scoring for a single spectrum.
-export function analyzeSpectrum(spectrum: Spectrum, db: SpeciescanDb, contaminants: Contaminant[], params: AnalysisParams): AnalysisResult {
+export function analyzeSpectrum(
+  spectrum: Spectrum,
+  db: SpeciescanDb,
+  contaminants: Contaminant[],
+  params: AnalysisParams,
+  decoyTaxa: RefTaxon[] = []
+): AnalysisResult {
   // Crop first (for both plotting + peak picking)
   const cropped = cropSpectrum(spectrum.mz, spectrum.intensity, params.mzMin, params.mzMax);
   const rawMz = cropped.mz;
@@ -29,6 +35,25 @@ export function analyzeSpectrum(spectrum: Spectrum, db: SpeciescanDb, contaminan
 
   // Speciescan correlation scoring
   const rankedTaxa = scoreTaxa(peaks, db.taxa, params);
+
+  const bestRealScore = rankedTaxa[0]?.correlation ?? NaN;
+  let bestDecoyScore = NaN;
+  let decoyGap = NaN;
+  let qSample = NaN;
+  if (decoyTaxa.length) {
+    const sampleVector = buildSampleVector(peaks, params);
+    let best = -Infinity;
+    let ge = 0;
+    for (const t of decoyTaxa) {
+      const y = buildTaxonVector(t, params);
+      const score = pearsonCorrelationBinary(sampleVector, y);
+      if (score > best) best = score;
+      if (Number.isFinite(bestRealScore) && score >= bestRealScore) ge++;
+    }
+    bestDecoyScore = best;
+    decoyGap = Number.isFinite(bestRealScore) ? bestRealScore - best : NaN;
+    qSample = Number.isFinite(bestRealScore) ? (ge + 1) / (decoyTaxa.length + 1) : NaN;
+  }
 
   const taxonMatchesTop: Record<string, any> = {};
   const topN = 15;
@@ -57,6 +82,12 @@ export function analyzeSpectrum(spectrum: Spectrum, db: SpeciescanDb, contaminan
     rankedTaxa,
     taxonMatchesTop,
     contaminants: contaminantHits,
+    fdr: {
+      nDecoys: decoyTaxa.length,
+      bestDecoyScore,
+      decoyGap,
+      qSample,
+    },
     qc: {
       mzMin: rawMz.length ? rawMz[0] : params.mzMin,
       mzMax: rawMz.length ? rawMz[rawMz.length - 1] : params.mzMax,

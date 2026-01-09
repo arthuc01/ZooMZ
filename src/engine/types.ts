@@ -81,6 +81,13 @@ export type AnalysisResult = {
   taxonMatchesTop: Record<string, MarkerMatchRow[]>;
   contaminants: ContaminantHit[];
 
+  fdr: {
+    nDecoys: number;
+    bestDecoyScore: number;
+    decoyGap: number;
+    qSample: number;
+  };
+
   qc: { mzMin: number; mzMax: number; maxIntensity: number; peakCount: number };
 };
 

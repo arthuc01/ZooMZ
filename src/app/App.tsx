@@ -8,10 +8,11 @@ import SettingsPanel from "../ui/SettingsPanel";
 import ContaminantsTable from "../ui/ContaminantsTable";
 import * as XLSX from "xlsx";
 
-import type { AnalysisParams, AnalysisResult, Contaminant, DbManifest, SpeciescanDb, Spectrum } from "../engine/types";
+import type { AnalysisParams, AnalysisResult, Contaminant, DbManifest, RefTaxon, SpeciescanDb, Spectrum } from "../engine/types";
 import { parseSpectrumFile } from "../engine/parse";
 import { analyzeSpectrum } from "../engine/analyze";
 import { loadContaminants, loadManifest, loadSpeciescanDb } from "../engine/speciescanDb";
+import { buildDecoyTaxa } from "../engine/decoys";
 
 const DEFAULT_PARAMS: AnalysisParams = {
   mzMin: 500,
@@ -29,6 +30,7 @@ export default function App() {
   const [selectedDbFile, setSelectedDbFile] = useState<string | null>(null);
 
   const [db, setDb] = useState<SpeciescanDb | null>(null);
+  const [decoyTaxa, setDecoyTaxa] = useState<RefTaxon[]>([]);
   const [contaminants, setContaminants] = useState<Contaminant[]>([]);
   const [params, setParams] = useState<AnalysisParams>(DEFAULT_PARAMS);
 
@@ -59,6 +61,7 @@ export default function App() {
       const dbEntry = m.databases.find(d => d.file === m.defaultDb) ?? m.databases[0];
       const loaded = await loadSpeciescanDb(dbEntry.label, dbEntry.file);
       setDb(loaded);
+      setDecoyTaxa(buildDecoyTaxa(loaded, { mzMin: params.mzMin, mzMax: params.mzMax, toleranceDa: 0.3 }));
 
       const cont = await loadContaminants(m.contaminantsFile);
       setContaminants(cont);
@@ -80,6 +83,7 @@ export default function App() {
       if (!entry) throw new Error("Unknown DB file");
       const loaded = await loadSpeciescanDb(entry.label, entry.file);
       setDb(loaded);
+      setDecoyTaxa(buildDecoyTaxa(loaded, { mzMin: params.mzMin, mzMax: params.mzMax, toleranceDa: 0.3 }));
       const cont = await loadContaminants(manifest.contaminantsFile);
       setContaminants(cont);
       setResults({});
@@ -123,7 +127,7 @@ export default function App() {
       for (let i = 0; i < targets.length; i++) {
         const s = targets[i];
         try {
-          next[s.id] = analyzeSpectrum(s, db, contaminants, params);
+          next[s.id] = analyzeSpectrum(s, db, contaminants, params, decoyTaxa);
         } catch (e: any) {
           errors.push(`${s.filename}: ${String(e?.message ?? e)}`);
         }
@@ -343,6 +347,11 @@ export default function App() {
       "medianMatchedIntensityTop",
       "contaminantsMatched",
       "maxContaminantIntensity",
+      "nDecoys",
+      "bestDecoyScore",
+      "decoyGap",
+      "qSample",
+      "confidenceLabel",
       "qcFlag",
       "qcNotes",
     ] as const;
@@ -379,6 +388,12 @@ export default function App() {
       const maxContaminantIntensity = r?.contaminants?.length
         ? Math.max(...r.contaminants.map(c => c.intensity))
         : null;
+
+      const fdr = r?.fdr;
+      const qSample = Number.isFinite(fdr?.qSample ?? NaN) ? fdr?.qSample ?? null : null;
+      const confidenceLabel = qSample == null
+        ? null
+        : (qSample <= 0.01 ? "High" : (qSample <= 0.05 ? "Medium" : "Low"));
 
       const qcNotes: string[] = [];
       let qcFlag: "OK" | "WARN" | "FAIL" = "OK";
@@ -426,6 +441,11 @@ export default function App() {
         medianMatchedIntensityTop,
         contaminantsMatched,
         maxContaminantIntensity,
+        nDecoys: fdr?.nDecoys ?? 0,
+        bestDecoyScore: Number.isFinite(fdr?.bestDecoyScore ?? NaN) ? fdr?.bestDecoyScore ?? null : null,
+        decoyGap: Number.isFinite(fdr?.decoyGap ?? NaN) ? fdr?.decoyGap ?? null : null,
+        qSample,
+        confidenceLabel,
         qcFlag,
         qcNotes: qcNotes.join("; "),
       };
