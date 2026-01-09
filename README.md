@@ -1,4 +1,6 @@
-# ZooMZ Browser App for doing ZooMS collagen analysis (React + Plotly) 
+# ZooMZ Browser App for doing ZooMS collagen analysis (React + Plotly)
+
+![ZooMZ logo](ZooMZ_logo.png)
 
 [Zooarchaeology by mass spectrometry](ZooMS.md), commonly referred to by the abbreviation ZooMS, is a scientific method that identifies animal species by means of characteristic peptide sequences in the protein collagen.
 
