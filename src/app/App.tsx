@@ -159,6 +159,54 @@ export default function App() {
     const samples = spectra.filter(s => results[s.id]);
     const workbook = XLSX.utils.book_new();
 
+    // Sheet 1: analysis parameters and methods paragraph
+    const now = new Date();
+    const analysisDateIso = now.toISOString();
+    const analysisDateLocal = now.toLocaleString();
+    const methodsParagraph = [
+      "ZooMZ (Zooarchaeology by mass spectrometry) analyses were performed in the ZooMZ browser app.",
+      `Spectra were cropped to ${params.mzMin}-${params.mzMax} m/z.`,
+      params.preprocess.enabled
+        ? `Preprocessing was enabled with normalize-to-max ${params.preprocess.normalizeToMax ? "on" : "off"}.`
+        : "Preprocessing was disabled.",
+      params.peakPicking.enabled
+        ? `Peak picking used a minimum relative intensity threshold of ${params.peakPicking.minRelativeIntensity} and a minimum peak distance of ${params.peakPicking.minPeakDistanceDa} Da.`
+        : "Peak picking was disabled.",
+      params.monoisotopic.enabled
+        ? `Monoisotopic filtering used tolerance ${params.monoisotopic.toleranceDa} Da, isotope spacing ${params.monoisotopic.distanceDa} Da, and max isotopes ${params.monoisotopic.maxIsotopes}.`
+        : "Monoisotopic filtering was disabled.",
+      `Scoring grid: start ${params.grid.startMz} m/z, end ${params.grid.endMz} m/z, step ${params.grid.stepMz} m/z.`,
+      `Contaminant tolerance ${params.contaminantsToleranceDa} Da.`,
+      `Analysis date: ${analysisDateLocal} (${analysisDateIso}).`
+    ].join(" ");
+
+    const paramsRows: (string | number)[][] = [
+      ["Field", "Value"],
+      ["Analysis date (local)", analysisDateLocal],
+      ["Analysis date (ISO)", analysisDateIso],
+      ["Reference DB label", db?.meta.label ?? ""],
+      ["Reference DB file", db?.meta.file ?? ""],
+      ["Samples analyzed", samples.length],
+      ["Spectra files", samples.map(s => s.filename).join("; ")],
+      ["mzMin", params.mzMin],
+      ["mzMax", params.mzMax],
+      ["Preprocess enabled", params.preprocess.enabled ? "Yes" : "No"],
+      ["Normalize to max", params.preprocess.normalizeToMax ? "Yes" : "No"],
+      ["Peak picking enabled", params.peakPicking.enabled ? "Yes" : "No"],
+      ["Peak min relative intensity", params.peakPicking.minRelativeIntensity],
+      ["Peak min distance (Da)", params.peakPicking.minPeakDistanceDa],
+      ["Monoisotopic enabled", params.monoisotopic.enabled ? "Yes" : "No"],
+      ["Monoisotopic tolerance (Da)", params.monoisotopic.toleranceDa],
+      ["Monoisotopic spacing (Da)", params.monoisotopic.distanceDa],
+      ["Monoisotopic max isotopes", params.monoisotopic.maxIsotopes],
+      ["Scoring grid start (m/z)", params.grid.startMz],
+      ["Scoring grid end (m/z)", params.grid.endMz],
+      ["Scoring grid step (m/z)", params.grid.stepMz],
+      ["Contaminants tolerance (Da)", params.contaminantsToleranceDa],
+      ["Methods paragraph", methodsParagraph],
+    ];
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(paramsRows), "Parameters");
+
     // Sheet 1: top-10 taxa per sample
     const topHeader = ["Rank", ...samples.map(s => s.filename)];
     const topRows: (string | number)[][] = [topHeader];
@@ -273,7 +321,7 @@ export default function App() {
       <Dropzone onFiles={onFiles} />
 
       <div className="row" style={{ marginTop: 12 }}>
-        <div className="col left" style={{ gap: 12 }}>
+        <div className="col left" style={{ gap: 20 }}>
           <SpectrumPlot
             spectrum={selectedSpectrum}
             result={selectedResult}
