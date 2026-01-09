@@ -49,3 +49,6 @@ Folder: `public/reference_dbs/`
 Emese I Végh, Katerina Douka, SpecieScan: semi-automated taxonomic identification of bone collagen peptides from MALDI-ToF-MS, Bioinformatics, Volume 40, Issue 3, March 2024, btae054, 
 [https://doi.org/10.1093/bioinformatics/btae054](https://doi.org/10.1093/bioinformatics/btae054)
 
+Xenarthrans reference DB: https://pubs.acs.org/doi/10.1021/acs.jproteome.5c00636
+Note: only MALDI-observable markers are included in the Xenarthrans list.
+
