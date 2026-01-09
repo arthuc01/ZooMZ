@@ -27,6 +27,7 @@ Folder: `public/reference_dbs/`
 - Populate the folder with Speciescan CSVs and update the manifest if you add/remove files.
 
 [SpecieScan](https://github.com/mesve/SpecieScan)
+
 Emese I Végh, Katerina Douka, SpecieScan: semi-automated taxonomic identification of bone collagen peptides from MALDI-ToF-MS, Bioinformatics, Volume 40, Issue 3, March 2024, btae054, 
 [https://doi.org/10.1093/bioinformatics/btae054](https://doi.org/10.1093/bioinformatics/btae054)
 
