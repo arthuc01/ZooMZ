@@ -6,12 +6,12 @@ import MarkerMatchTable from "../ui/MarkerMatchTable";
 import BatchQueueTable from "../ui/BatchQueueTable";
 import SettingsPanel from "../ui/SettingsPanel";
 import ContaminantsTable from "../ui/ContaminantsTable";
+import * as XLSX from "xlsx";
 
 import type { AnalysisParams, AnalysisResult, Contaminant, DbManifest, SpeciescanDb, Spectrum } from "../engine/types";
 import { parseSpectrumFile } from "../engine/parse";
 import { analyzeSpectrum } from "../engine/analyze";
 import { loadContaminants, loadManifest, loadSpeciescanDb } from "../engine/speciescanDb";
-import { downloadText } from "../utils/download";
 
 const DEFAULT_PARAMS: AnalysisParams = {
   mzMin: 500,
@@ -47,6 +47,7 @@ export default function App() {
 
   const selectedSpectrum = useMemo(() => spectra.find(s => s.id === selectedId) ?? null, [spectra, selectedId]);
   const selectedResult = useMemo(() => (selectedId ? results[selectedId] ?? null : null), [results, selectedId]);
+  const hasResults = useMemo(() => Object.values(results).some(Boolean), [results]);
 
   // Load manifest and default DB on first render.
   useEffect(() => {
@@ -142,28 +143,103 @@ export default function App() {
     runAnalysis(spectra.map(s => s.id));
   }
 
-  // Export marker matches for the selected taxon as CSV.
-  function exportSelected() {
-    if (!selectedSpectrum || !selectedResult || !inspectTaxonId) return;
-    const rows = selectedResult.taxonMatchesTop[inspectTaxonId] ?? [];
-    // Escape CSV cells safely.
-    const csvEscape = (value: string) => {
-      const needsQuotes = /[",\r\n]/.test(value);
-      const escaped = value.replace(/"/g, '""');
-      return needsQuotes ? `"${escaped}"` : escaped;
-    };
-    const csv = [
-      ["markerName","expectedMz","matched","matchedPeakMz","matchedPeakIntensity"].join(","),
-      ...rows.map(r => [
-        csvEscape(r.markerName),
-        r.expectedMz.toFixed(6),
-        r.matched ? "1" : "0",
-        r.matchedPeakMz === null ? "" : r.matchedPeakMz.toFixed(6),
-        r.matchedPeakIntensity === null ? "" : String(r.matchedPeakIntensity)
-      ].join(","))
-    ].join("\r\n");
+  // Format a match as "mz (intensity)" for Excel cells.
+  function formatMatch(mz: number | null | undefined, intensity: number | null | undefined): string {
+    if (mz == null || intensity == null) return "";
+    return `${mz.toFixed(3)} (${intensity.toFixed(3)})`;
+  }
 
-    downloadText(selectedSpectrum.filename.replace(/\.(mzml|mzxml)$/i, "") + "_marker_matches.csv", csv, "text/csv");
+  // Export batch results to a multi-sheet Excel workbook.
+  function exportBatchExcel() {
+    if (!hasResults) {
+      setError("Run analysis before exporting.");
+      return;
+    }
+
+    const samples = spectra.filter(s => results[s.id]);
+    const workbook = XLSX.utils.book_new();
+
+    // Sheet 1: top-10 taxa per sample
+    const topHeader = ["Rank", ...samples.map(s => s.filename)];
+    const topRows: (string | number)[][] = [topHeader];
+    for (let i = 0; i < 10; i++) {
+      const row: (string | number)[] = [`${i + 1}`];
+      for (const s of samples) {
+        const r = results[s.id];
+        const t = r?.rankedTaxa?.[i];
+        row.push(t ? `${t.taxonLabel} (${t.correlation.toFixed(3)})` : "");
+      }
+      topRows.push(row);
+    }
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(topRows), "Top 10 Taxa");
+
+    // Sheet 2: marker matches for each sample's top-ranked taxon
+    const markerNameOrder: string[] = [];
+    const markerNames = new Set<string>();
+    const markerMaps = new Map<string, Map<string, { mz: number; intensity: number }>>();
+
+    for (const s of samples) {
+      const r = results[s.id];
+      const top = r?.rankedTaxa?.[0];
+      const rows = top ? (r?.taxonMatchesTop[top.taxonId] ?? []) : [];
+      const m = new Map<string, { mz: number; intensity: number }>();
+      for (const row of rows) {
+        if (!markerNames.has(row.markerName)) {
+          markerNames.add(row.markerName);
+          markerNameOrder.push(row.markerName);
+        }
+        if (row.matchedPeakMz != null && row.matchedPeakIntensity != null) {
+          m.set(row.markerName, { mz: row.matchedPeakMz, intensity: row.matchedPeakIntensity });
+        }
+      }
+      markerMaps.set(s.id, m);
+    }
+
+    const markerHeader = ["Marker", ...samples.map(s => s.filename)];
+    const markerRows: (string | number)[][] = [markerHeader];
+    for (const name of markerNameOrder) {
+      const row: (string | number)[] = [name];
+      for (const s of samples) {
+        const m = markerMaps.get(s.id);
+        const match = m?.get(name);
+        row.push(formatMatch(match?.mz, match?.intensity));
+      }
+      markerRows.push(row);
+    }
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(markerRows), "Marker Matches");
+
+    // Sheet 3: contaminants per sample
+    const contaminantOrder: string[] = [];
+    const contaminantNames = new Set<string>();
+    const contaminantMaps = new Map<string, Map<string, { mz: number; intensity: number }>>();
+    for (const s of samples) {
+      const r = results[s.id];
+      const rows = r?.contaminants ?? [];
+      const m = new Map<string, { mz: number; intensity: number }>();
+      for (const row of rows) {
+        if (!contaminantNames.has(row.name)) {
+          contaminantNames.add(row.name);
+          contaminantOrder.push(row.name);
+        }
+        m.set(row.name, { mz: row.matchedPeakMz, intensity: row.intensity });
+      }
+      contaminantMaps.set(s.id, m);
+    }
+
+    const contHeader = ["Contaminant", ...samples.map(s => s.filename)];
+    const contRows: (string | number)[][] = [contHeader];
+    for (const name of contaminantOrder) {
+      const row: (string | number)[] = [name];
+      for (const s of samples) {
+        const m = contaminantMaps.get(s.id);
+        const match = m?.get(name);
+        row.push(formatMatch(match?.mz, match?.intensity));
+      }
+      contRows.push(row);
+    }
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(contRows), "Contaminants");
+
+    XLSX.writeFile(workbook, "ZooMZ_results.xlsx");
   }
 
   return (
@@ -180,8 +256,8 @@ export default function App() {
           <button className="btn" disabled={busy || !spectra.length || !db} onClick={runAll}>
             Run batch
           </button>
-          <button className="btn" disabled={!selectedResult || !inspectTaxonId} onClick={exportSelected}>
-            Export selected-tax. markers CSV
+          <button className="btn" disabled={!hasResults} onClick={exportBatchExcel}>
+            Export batch Excel
           </button>
         </div>
       </div>
