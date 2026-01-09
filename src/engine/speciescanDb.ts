@@ -2,10 +2,8 @@ import { uid } from "../utils/id";
 import type { Contaminant, DbManifest, RefMarker, RefTaxon, SpeciescanDb } from "./types";
 import { parseCsv, toNumberMaybe } from "./csv";
 
-const baseUrl = import.meta.env.BASE_URL;
-
 function refDbUrl(path: string): string {
-  return `${baseUrl}reference_dbs/${path}`;
+  return `reference_dbs/${path}`;
 }
 
 export async function loadManifest(): Promise<DbManifest> {
