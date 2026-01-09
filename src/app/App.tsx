@@ -279,6 +279,11 @@ export default function App() {
             displayMode={displayMode}
             displayNormalizeToMax={displayNormalizeToMax}
           />
+          <ResultsTable
+            result={selectedResult}
+            selectedTaxonId={inspectTaxonId}
+            onSelectTaxon={(id)=>setInspectTaxonId(id)}
+          />
         </div>
         <div className="col right">
           <SettingsPanel
@@ -300,18 +305,6 @@ export default function App() {
             selectedId={selectedId}
             onSelect={setSelectedId}
           />
-        </div>
-      </div>
-
-      <div className="row" style={{ marginTop: 12 }}>
-        <div className="col left">
-          <ResultsTable
-            result={selectedResult}
-            selectedTaxonId={inspectTaxonId}
-            onSelectTaxon={(id)=>setInspectTaxonId(id)}
-          />
-        </div>
-        <div className="col right">
           <MarkerMatchTable result={selectedResult} taxonId={inspectTaxonId} />
         </div>
       </div>
