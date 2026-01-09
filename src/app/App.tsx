@@ -247,7 +247,9 @@ export default function App() {
       <div className="header">
         <div>
           <div style={{ fontSize: 18, fontWeight: 800 }}>ZooMZ - App for Zooarchaeology by mass spectrometry (ZooMS)</div>
-          <div className="small">SpecieScan-style correlation scoring + marker/contaminant analysis.</div>
+          <div className="small">SpecieScan-style correlation scoring + marker/contaminant analysis. 
+            :: <a href="https://github.com/arthuc01/ZooMZ">Github repository</a>
+          </div>
         </div>
         <div style={{ display:"flex", gap: 8 }}>
           <button className="btn primary" disabled={busy || !selectedSpectrum || !db} onClick={() => runAnalysis()}>
