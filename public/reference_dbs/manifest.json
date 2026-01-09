@@ -29,9 +29,9 @@
       "label": "Reptiles",
       "file": "Reptiles_reference_db.csv"
     },
-        {
-      "label": "Xenarthrans",
-      "file": "Xenarthrans_reference_db.csv"
+      {
+      "label": "In Silico Search",
+      "file": "Rspeciescan_in_silico_markers_ZooMS_taxon.csv"
     }
   ],
   "contaminantsFile": "contaminants_list.csv"
