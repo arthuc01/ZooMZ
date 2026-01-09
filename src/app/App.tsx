@@ -149,6 +149,24 @@ export default function App() {
     return `${mz.toFixed(3)} (${intensity.toFixed(3)})`;
   }
 
+  // Compute the median of a numeric array, or null when empty.
+  function median(numbers: number[]): number | null {
+    if (!numbers.length) return null;
+    const sorted = [...numbers].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    if (sorted.length % 2 === 0) return (sorted[mid - 1] + sorted[mid]) / 2;
+    return sorted[mid];
+  }
+
+  // Compute the interquartile range of a numeric array, or null when empty.
+  function iqr(numbers: number[]): number | null {
+    if (numbers.length < 4) return null;
+    const sorted = [...numbers].sort((a, b) => a - b);
+    const q1Idx = Math.floor((sorted.length - 1) * 0.25);
+    const q3Idx = Math.floor((sorted.length - 1) * 0.75);
+    return sorted[q3Idx] - sorted[q1Idx];
+  }
+
   // Export batch results to a multi-sheet Excel workbook.
   function exportBatchExcel() {
     if (!hasResults) {
@@ -286,6 +304,177 @@ export default function App() {
       contRows.push(row);
     }
     XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(contRows), "Contaminants");
+
+    // QC Summary (one row per analyzed sample)
+    const QC_MIN_PEAKS = 30;
+    const QC_MIN_MARKERS = 3;
+    const QC_MIN_FRAC = 0.2;
+    const QC_MAX_MEDIAN_PPM = 50;
+    const QC_MAX_CONTAMS = 3;
+
+    const qcHeader = [
+      "spectrumId",
+      "filename",
+      "db_label",
+      "db_file",
+      "mzMin",
+      "mzMax",
+      "centroided",
+      "peakCount",
+      "maxIntensity",
+      "preprocess_enabled",
+      "normalizeToMax",
+      "peakpick_enabled",
+      "minRelativeIntensity",
+      "minPeakDistanceDa",
+      "monoisotopic_enabled",
+      "mono_toleranceDa",
+      "mono_distanceDa",
+      "mono_maxIsotopes",
+      "topTaxonId",
+      "topTaxonLabel",
+      "topCorrelation",
+      "markersTotalTop",
+      "markersMatchedTop",
+      "fracMarkersMatchedTop",
+      "medianAbsDeltaDaTop",
+      "medianAbsPpmTop",
+      "iqrAbsPpmTop",
+      "medianMatchedIntensityTop",
+      "contaminantsMatched",
+      "maxContaminantIntensity",
+      "qcFlag",
+      "qcNotes",
+    ] as const;
+
+    const qcRows = samples.map((s) => {
+      const r = results[s.id];
+      const qc = r?.qc;
+      const top = r?.rankedTaxa?.[0];
+      const topTaxonId = top?.taxonId;
+      const markerRows = topTaxonId ? (r?.taxonMatchesTop[topTaxonId] ?? []) : [];
+      const matchedMarkerRows = markerRows.filter(m => m.matched === true && m.matchedPeakMz != null);
+
+      const absDeltaDa: number[] = [];
+      const absPpm: number[] = [];
+      const matchedIntensities: number[] = [];
+      for (const m of matchedMarkerRows) {
+        if (m.matchedPeakMz != null && m.expectedMz > 0) {
+          const delta = m.matchedPeakMz - m.expectedMz;
+          absDeltaDa.push(Math.abs(delta));
+          absPpm.push(Math.abs((delta / m.expectedMz) * 1e6));
+        }
+        if (m.matchedPeakIntensity != null) matchedIntensities.push(m.matchedPeakIntensity);
+      }
+
+      const markersMatchedTop = matchedMarkerRows.length;
+      const markersTotalTop = markerRows.length;
+      const fracMarkersMatchedTop = markersTotalTop ? (markersMatchedTop / markersTotalTop) : null;
+      const medianAbsDeltaDaTop = median(absDeltaDa);
+      const medianAbsPpmTop = median(absPpm);
+      const iqrAbsPpmTop = iqr(absPpm);
+      const medianMatchedIntensityTop = median(matchedIntensities);
+
+      const contaminantsMatched = r?.contaminants?.length ?? 0;
+      const maxContaminantIntensity = r?.contaminants?.length
+        ? Math.max(...r.contaminants.map(c => c.intensity))
+        : null;
+
+      const qcNotes: string[] = [];
+      let qcFlag: "OK" | "WARN" | "FAIL" = "OK";
+      const peakCount = qc?.peakCount ?? null;
+
+      if (peakCount !== null && peakCount < QC_MIN_PEAKS) qcNotes.push("low peak count");
+      if (markersMatchedTop < QC_MIN_MARKERS) qcNotes.push("few markers matched");
+      if (qcNotes.length) qcFlag = "FAIL";
+
+      if (qcFlag !== "FAIL") {
+        if (fracMarkersMatchedTop !== null && fracMarkersMatchedTop < QC_MIN_FRAC) qcNotes.push("low marker fraction");
+        if (medianAbsPpmTop !== null && medianAbsPpmTop > QC_MAX_MEDIAN_PPM) qcNotes.push("high ppm error");
+        if (contaminantsMatched >= QC_MAX_CONTAMS) qcNotes.push("many contaminants");
+        if (qcNotes.length) qcFlag = "WARN";
+      }
+
+      return {
+        spectrumId: s.id,
+        filename: s.filename,
+        db_label: db?.meta.label ?? null,
+        db_file: db?.meta.file ?? null,
+        mzMin: qc?.mzMin ?? params.mzMin,
+        mzMax: qc?.mzMax ?? params.mzMax,
+        centroided: s.centroided ?? null,
+        peakCount,
+        maxIntensity: qc?.maxIntensity ?? null,
+        preprocess_enabled: params.preprocess.enabled,
+        normalizeToMax: params.preprocess.normalizeToMax,
+        peakpick_enabled: params.peakPicking.enabled,
+        minRelativeIntensity: params.peakPicking.minRelativeIntensity,
+        minPeakDistanceDa: params.peakPicking.minPeakDistanceDa,
+        monoisotopic_enabled: params.monoisotopic.enabled,
+        mono_toleranceDa: params.monoisotopic.toleranceDa,
+        mono_distanceDa: params.monoisotopic.distanceDa,
+        mono_maxIsotopes: params.monoisotopic.maxIsotopes,
+        topTaxonId: top?.taxonId ?? null,
+        topTaxonLabel: top?.taxonLabel ?? null,
+        topCorrelation: top?.correlation ?? null,
+        markersTotalTop,
+        markersMatchedTop,
+        fracMarkersMatchedTop,
+        medianAbsDeltaDaTop,
+        medianAbsPpmTop,
+        iqrAbsPpmTop,
+        medianMatchedIntensityTop,
+        contaminantsMatched,
+        maxContaminantIntensity,
+        qcFlag,
+        qcNotes: qcNotes.join("; "),
+      };
+    });
+
+    const qcSheet = XLSX.utils.json_to_sheet(qcRows, { header: [...qcHeader] });
+    qcSheet["!freeze"] = { xSplit: 0, ySplit: 1 };
+    XLSX.utils.book_append_sheet(workbook, qcSheet, "QC Summary");
+
+    const qcMarkerHeader = [
+      "spectrumId",
+      "filename",
+      "topTaxonId",
+      "topTaxonLabel",
+      "markerName",
+      "expectedMz",
+      "matched",
+      "matchedPeakMz",
+      "matchedPeakIntensity",
+      "deltaDa",
+      "ppm",
+    ] as const;
+
+    const qcMarkerRows = samples.flatMap((s) => {
+      const r = results[s.id];
+      const top = r?.rankedTaxa?.[0];
+      const topTaxonId = top?.taxonId;
+      const rows = topTaxonId ? (r?.taxonMatchesTop[topTaxonId] ?? []) : [];
+      return rows.map((m) => {
+        const deltaDa = m.matchedPeakMz != null ? (m.matchedPeakMz - m.expectedMz) : null;
+        const ppm = (deltaDa != null && m.expectedMz > 0) ? (deltaDa / m.expectedMz) * 1e6 : null;
+        return {
+          spectrumId: s.id,
+          filename: s.filename,
+          topTaxonId: top?.taxonId ?? null,
+          topTaxonLabel: top?.taxonLabel ?? null,
+          markerName: m.markerName,
+          expectedMz: m.expectedMz,
+          matched: m.matched,
+          matchedPeakMz: m.matchedPeakMz ?? null,
+          matchedPeakIntensity: m.matchedPeakIntensity ?? null,
+          deltaDa,
+          ppm,
+        };
+      });
+    });
+
+    const qcMarkerSheet = XLSX.utils.json_to_sheet(qcMarkerRows, { header: [...qcMarkerHeader] });
+    XLSX.utils.book_append_sheet(workbook, qcMarkerSheet, "QC Markers");
 
     XLSX.writeFile(workbook, "ZooMZ_results.xlsx");
   }
