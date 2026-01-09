@@ -19,6 +19,12 @@ npm install
 npm run dev
 ```
 
+## Deploy (GitHub Pages)
+
+This repo is configured to deploy on pushes to `main` via GitHub Actions.
+If your repository name is not `ZooMZ`, update the `base` path in
+`vite.config.ts` to `/<your-repo>/`.
+
 ## Reference DBs
 
 Folder: `public/reference_dbs/`
