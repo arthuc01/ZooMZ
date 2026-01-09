@@ -271,7 +271,7 @@ export default function App() {
       <Dropzone onFiles={onFiles} />
 
       <div className="row" style={{ marginTop: 12 }}>
-        <div className="col left" style={{ gap: 0 }}>
+        <div className="col left" style={{ gap: 12 }}>
           <SpectrumPlot
             spectrum={selectedSpectrum}
             result={selectedResult}
