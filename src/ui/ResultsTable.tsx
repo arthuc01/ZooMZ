@@ -58,6 +58,7 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
               <th>Rank</th>
               <th>Taxon</th>
               <th>Correlation</th>
+              <th>Confidence</th>
             </tr>
           </thead>
           <tbody>
@@ -66,6 +67,7 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
                 <td>{i + 1}</td>
                 <td>{t.taxonLabel}</td>
                 <td>{t.correlation.toFixed(3)}</td>
+                <td><span className={confidenceClass}>{confidenceLabel}</span></td>
               </tr>
             ))}
           </tbody>

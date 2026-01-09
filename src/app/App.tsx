@@ -21,7 +21,8 @@ const DEFAULT_PARAMS: AnalysisParams = {
   peakPicking: { enabled: true, minRelativeIntensity: 0.05, minPeakDistanceDa: 0.8 },
   monoisotopic: { enabled: true, toleranceDa: 0.2, distanceDa: 1.00235, maxIsotopes: 5 },
   grid: { startMz: 500, endMz: 3500, stepMz: 0.1 },
-  contaminantsToleranceDa: 0.3
+  contaminantsToleranceDa: 0.3,
+  fdr: { enabled: true, nDecoys: 200, maxDecoys: 1000, seed: 1337, toleranceDa: 0.3 }
 };
 
 // Top-level app component for ZooMS analysis workflow.
@@ -61,7 +62,16 @@ export default function App() {
       const dbEntry = m.databases.find(d => d.file === m.defaultDb) ?? m.databases[0];
       const loaded = await loadSpeciescanDb(dbEntry.label, dbEntry.file);
       setDb(loaded);
-      setDecoyTaxa(buildDecoyTaxa(loaded, { mzMin: params.mzMin, mzMax: params.mzMax, toleranceDa: 0.3 }));
+      setDecoyTaxa(params.fdr.enabled
+        ? buildDecoyTaxa(loaded, {
+          nDecoys: params.fdr.nDecoys,
+          maxDecoys: params.fdr.maxDecoys,
+          seed: params.fdr.seed,
+          mzMin: params.mzMin,
+          mzMax: params.mzMax,
+          toleranceDa: params.fdr.toleranceDa,
+        })
+        : []);
 
       const cont = await loadContaminants(m.contaminantsFile);
       setContaminants(cont);
@@ -83,7 +93,16 @@ export default function App() {
       if (!entry) throw new Error("Unknown DB file");
       const loaded = await loadSpeciescanDb(entry.label, entry.file);
       setDb(loaded);
-      setDecoyTaxa(buildDecoyTaxa(loaded, { mzMin: params.mzMin, mzMax: params.mzMax, toleranceDa: 0.3 }));
+      setDecoyTaxa(params.fdr.enabled
+        ? buildDecoyTaxa(loaded, {
+          nDecoys: params.fdr.nDecoys,
+          maxDecoys: params.fdr.maxDecoys,
+          seed: params.fdr.seed,
+          mzMin: params.mzMin,
+          mzMax: params.mzMax,
+          toleranceDa: params.fdr.toleranceDa,
+        })
+        : []);
       const cont = await loadContaminants(manifest.contaminantsFile);
       setContaminants(cont);
       setResults({});
@@ -94,6 +113,22 @@ export default function App() {
       setBusy(false);
     }
   }
+
+  useEffect(() => {
+    if (!db) return;
+    if (!params.fdr.enabled) {
+      setDecoyTaxa([]);
+      return;
+    }
+    setDecoyTaxa(buildDecoyTaxa(db, {
+      nDecoys: params.fdr.nDecoys,
+      maxDecoys: params.fdr.maxDecoys,
+      seed: params.fdr.seed,
+      mzMin: params.mzMin,
+      mzMax: params.mzMax,
+      toleranceDa: params.fdr.toleranceDa,
+    }));
+  }, [db, params.fdr, params.mzMin, params.mzMax]);
 
   // Parse uploaded files and append to the batch list.
   async function onFiles(files: File[]) {

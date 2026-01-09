@@ -62,6 +62,14 @@ export type AnalysisParams = {
   grid: { startMz: number; endMz: number; stepMz: number };
 
   contaminantsToleranceDa: number; // typically 0.3
+
+  fdr: {
+    enabled: boolean;
+    nDecoys: number;
+    maxDecoys: number;
+    seed: number;
+    toleranceDa: number;
+  };
 };
 
 export type AnalysisResult = {

@@ -234,6 +234,68 @@ export default function SettingsPanel(props: Props) {
         />
       </div>
 
+      <div className="small" style={{ marginTop: 10 }} title="Configure target-decoy confidence scoring.">FDR (target-decoy)</div>
+      <label className="small" style={{ display:"flex", gap: 6, alignItems:"center" }} title="Compute per-sample confidence using decoy scoring.">
+        <input
+          type="checkbox"
+          checked={params.fdr.enabled}
+          onChange={(e)=>onChange({ ...params, fdr: { ...params.fdr, enabled: e.target.checked } })}
+        />
+        Enable decoy confidence
+      </label>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap: 8, marginTop: 6 }}>
+        <div>
+          <div className="small" title="Number of decoy taxa to generate.">Decoys (n)</div>
+          <input
+            className="input"
+            type="number"
+            step="1"
+            min="0"
+            value={params.fdr.nDecoys}
+            onChange={(e)=>onChange({ ...params, fdr: { ...params.fdr, nDecoys: Number(e.target.value) } })}
+            disabled={!params.fdr.enabled}
+            title="Number of decoy taxa to generate."
+          />
+        </div>
+        <div>
+          <div className="small" title="Maximum allowed decoys for performance.">Max decoys</div>
+          <input
+            className="input"
+            type="number"
+            step="1"
+            min="0"
+            value={params.fdr.maxDecoys}
+            onChange={(e)=>onChange({ ...params, fdr: { ...params.fdr, maxDecoys: Number(e.target.value) } })}
+            disabled={!params.fdr.enabled}
+            title="Maximum allowed decoys for performance."
+          />
+        </div>
+        <div>
+          <div className="small" title="Seed for deterministic decoy generation.">Seed</div>
+          <input
+            className="input"
+            type="number"
+            step="1"
+            value={params.fdr.seed}
+            onChange={(e)=>onChange({ ...params, fdr: { ...params.fdr, seed: Number(e.target.value) } })}
+            disabled={!params.fdr.enabled}
+            title="Seed for deterministic decoy generation."
+          />
+        </div>
+        <div>
+          <div className="small" title="Tolerance for excluding decoys near real markers.">Tolerance (Da)</div>
+          <input
+            className="input"
+            type="number"
+            step="0.05"
+            value={params.fdr.toleranceDa}
+            onChange={(e)=>onChange({ ...params, fdr: { ...params.fdr, toleranceDa: Number(e.target.value) } })}
+            disabled={!params.fdr.enabled}
+            title="Tolerance for excluding decoys near real markers."
+          />
+        </div>
+      </div>
+
       {db && (
         <div className="small" style={{ marginTop: 10 }}>
           Loaded: <b>{db.meta.label}</b> — {db.taxa.length} taxa, {db.markerNames.length} markers
