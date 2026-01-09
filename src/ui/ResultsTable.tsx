@@ -20,6 +20,7 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
 
   const top = result.rankedTaxa[0];
   const qSample = Number.isFinite(result.fdr?.qSample ?? NaN) ? result.fdr?.qSample ?? null : null;
+  const hasFdr = (result.fdr?.nDecoys ?? 0) > 0 && qSample != null;
   const confidenceLabel = qSample == null
     ? "Unknown"
     : (qSample <= 0.01 ? "High" : (qSample <= 0.05 ? "Medium" : "Low"));
@@ -73,6 +74,18 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
           </tbody>
         </table>
       </div>
+
+      {hasFdr && (
+        <div style={{ marginTop: 10 }}>
+          <div className="small" style={{ marginBottom: 6 }}>FDR details</div>
+          <div className="kv">
+            <div className="small">Decoys</div><div>{result.fdr.nDecoys}</div>
+            <div className="small">Best decoy score</div><div>{result.fdr.bestDecoyScore.toFixed(3)}</div>
+            <div className="small">Decoy gap</div><div>{result.fdr.decoyGap.toFixed(3)}</div>
+            <div className="small">q-sample</div><div>{qSample?.toFixed(3)}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -100,6 +100,32 @@ export default function SettingsPanel(props: Props) {
         Normalize (processed) to max
       </label>
 
+      <label className="small" style={{ display:"flex", gap: 6, alignItems:"center" }} title="Subtract baseline using SNIP algorithm before peak picking.">
+        <input
+          type="checkbox"
+          checked={params.preprocess.baselineSubtract.enabled}
+          onChange={(e)=>onChange({ ...params, preprocess: { ...params.preprocess, baselineSubtract: { ...params.preprocess.baselineSubtract, enabled: e.target.checked } } })}
+          disabled={!params.preprocess.enabled}
+        />
+        Baseline subtract (SNIP)
+      </label>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap: 8, marginTop: 6 }}>
+        <div>
+          <div className="small" title="Number of SNIP iterations.">SNIP iterations</div>
+          <input
+            className="input"
+            type="number"
+            step="1"
+            min="1"
+            value={params.preprocess.baselineSubtract.iterations}
+            onChange={(e)=>onChange({ ...params, preprocess: { ...params.preprocess, baselineSubtract: { ...params.preprocess.baselineSubtract, iterations: Number(e.target.value) } } })}
+            disabled={!params.preprocess.enabled || !params.preprocess.baselineSubtract.enabled}
+            title="Number of SNIP iterations."
+          />
+        </div>
+      </div>
+
       <div className="small" style={{ marginTop: 10 }} title="Detect peaks before scoring.">Peak picking</div>
       <label className="small" style={{ display:"flex", gap: 6, alignItems:"center" }} title="Enable peak detection on the processed spectrum.">
         <input

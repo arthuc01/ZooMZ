@@ -11,7 +11,9 @@ This app supports:
 - Peak picking
 - Matching against **Speciescan-style reference DB CSVs** (one row per species/taxon; marker m/z in columns)
 - Automatic contaminant search from `public/reference_dbs/contaminants_list.csv`
-- Export marker matches for the currently-inspected taxon
+- Per-sample confidence using target-decoy FDR scoring with configurable decoy settings
+- Batch Excel export with QC summary, marker matches, and contaminants
+- Confidence labels (High/Medium/Low) in results tables
 - Note: expected input files are single-scan MALDI MS (multi-scan mzML is not supported)
 
 ## Run

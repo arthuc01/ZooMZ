@@ -1,5 +1,5 @@
 import type { AnalysisParams, AnalysisResult, Contaminant, RefTaxon, SpeciescanDb, Spectrum } from "./types";
-import { cropSpectrum, normalizeToMax } from "./preprocess";
+import { cropSpectrum, normalizeToMax, snipBaseline, subtractBaseline } from "./preprocess";
 import { keepMonoisotopicPeaks, pickPeaks } from "./peakPicking";
 import { buildSampleVector, buildTaxonVector, markerMatchesForTaxon, matchContaminants, pearsonCorrelationBinary, scoreTaxa } from "./speciescanScoring";
 
@@ -20,8 +20,14 @@ export function analyzeSpectrum(
   // (You can extend this later with Savitzky–Golay + SNIP baseline, etc.)
   let processedMz = rawMz;
   let processedIntensity = rawIntensity;
-  if (params.preprocess.enabled && params.preprocess.normalizeToMax) {
-    processedIntensity = normalizeToMax(processedIntensity);
+  if (params.preprocess.enabled) {
+    if (params.preprocess.baselineSubtract.enabled) {
+      const baseline = snipBaseline(processedIntensity, params.preprocess.baselineSubtract.iterations);
+      processedIntensity = subtractBaseline(processedIntensity, baseline);
+    }
+    if (params.preprocess.normalizeToMax) {
+      processedIntensity = normalizeToMax(processedIntensity);
+    }
   }
 
   // Peak picking on processed spectrum

@@ -17,7 +17,7 @@ import { buildDecoyTaxa } from "../engine/decoys";
 const DEFAULT_PARAMS: AnalysisParams = {
   mzMin: 500,
   mzMax: 3500,
-  preprocess: { enabled: true, normalizeToMax: true },
+  preprocess: { enabled: true, normalizeToMax: true, baselineSubtract: { enabled: false, iterations: 50 } },
   peakPicking: { enabled: true, minRelativeIntensity: 0.05, minPeakDistanceDa: 0.8 },
   monoisotopic: { enabled: true, toleranceDa: 0.2, distanceDa: 1.00235, maxIsotopes: 5 },
   grid: { startMz: 500, endMz: 3500, stepMz: 0.1 },
@@ -224,7 +224,7 @@ export default function App() {
       "ZooMZ (Zooarchaeology by mass spectrometry) analyses were performed in the ZooMZ browser app.",
       `Spectra were cropped to ${params.mzMin}-${params.mzMax} m/z.`,
       params.preprocess.enabled
-        ? `Preprocessing was enabled with normalize-to-max ${params.preprocess.normalizeToMax ? "on" : "off"}.`
+        ? `Preprocessing was enabled with normalize-to-max ${params.preprocess.normalizeToMax ? "on" : "off"} and baseline subtract ${params.preprocess.baselineSubtract.enabled ? "on" : "off"}.`
         : "Preprocessing was disabled.",
       params.peakPicking.enabled
         ? `Peak picking used a minimum relative intensity threshold of ${params.peakPicking.minRelativeIntensity} and a minimum peak distance of ${params.peakPicking.minPeakDistanceDa} Da.`
@@ -249,6 +249,8 @@ export default function App() {
       ["mzMax", params.mzMax],
       ["Preprocess enabled", params.preprocess.enabled ? "Yes" : "No"],
       ["Normalize to max", params.preprocess.normalizeToMax ? "Yes" : "No"],
+      ["Baseline subtract enabled", params.preprocess.baselineSubtract.enabled ? "Yes" : "No"],
+      ["Baseline subtract iterations", params.preprocess.baselineSubtract.iterations],
       ["Peak picking enabled", params.peakPicking.enabled ? "Yes" : "No"],
       ["Peak min relative intensity", params.peakPicking.minRelativeIntensity],
       ["Peak min distance (Da)", params.peakPicking.minPeakDistanceDa],
@@ -363,6 +365,8 @@ export default function App() {
       "maxIntensity",
       "preprocess_enabled",
       "normalizeToMax",
+      "baselineSubtract_enabled",
+      "baselineSubtract_iterations",
       "peakpick_enabled",
       "minRelativeIntensity",
       "minPeakDistanceDa",
@@ -456,7 +460,9 @@ export default function App() {
         peakCount,
         maxIntensity: qc?.maxIntensity ?? null,
         preprocess_enabled: params.preprocess.enabled,
-        normalizeToMax: params.preprocess.normalizeToMax,
+      normalizeToMax: params.preprocess.normalizeToMax,
+      baselineSubtract_enabled: params.preprocess.baselineSubtract.enabled,
+      baselineSubtract_iterations: params.preprocess.baselineSubtract.iterations,
         peakpick_enabled: params.peakPicking.enabled,
         minRelativeIntensity: params.peakPicking.minRelativeIntensity,
         minPeakDistanceDa: params.peakPicking.minPeakDistanceDa,

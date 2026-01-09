@@ -19,3 +19,38 @@ export function normalizeToMax(intensity: Float64Array): Float64Array {
   for (let i = 0; i < intensity.length; i++) out[i] = intensity[i] / maxI;
   return out;
 }
+
+// Estimate baseline using a simple SNIP algorithm on log1p intensities.
+export function snipBaseline(intensity: Float64Array, iterations: number): Float64Array {
+  const n = intensity.length;
+  if (n < 3) return new Float64Array(intensity);
+
+  const maxIter = Math.max(1, Math.min(iterations, Math.floor(n / 2) - 1));
+  const logY = new Float64Array(n);
+  for (let i = 0; i < n; i++) logY[i] = Math.log1p(Math.max(0, intensity[i]));
+
+  let prev = logY;
+  let next = new Float64Array(n);
+
+  for (let k = 1; k <= maxIter; k++) {
+    next.set(prev);
+    for (let i = k; i < n - k; i++) {
+      const avg = 0.5 * (prev[i - k] + prev[i + k]);
+      if (avg < next[i]) next[i] = avg;
+    }
+    const tmp = prev;
+    prev = next;
+    next = tmp;
+  }
+
+  const baseline = new Float64Array(n);
+  for (let i = 0; i < n; i++) baseline[i] = Math.expm1(prev[i]);
+  return baseline;
+}
+
+export function subtractBaseline(intensity: Float64Array, baseline: Float64Array): Float64Array {
+  const n = intensity.length;
+  const out = new Float64Array(n);
+  for (let i = 0; i < n; i++) out[i] = Math.max(0, intensity[i] - baseline[i]);
+  return out;
+}

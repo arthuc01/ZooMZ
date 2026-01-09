@@ -52,7 +52,11 @@ export type AnalysisParams = {
   mzMin: number;
   mzMax: number;
 
-  preprocess: { enabled: boolean; normalizeToMax: boolean };
+  preprocess: {
+    enabled: boolean;
+    normalizeToMax: boolean;
+    baselineSubtract: { enabled: boolean; iterations: number };
+  };
   peakPicking: { enabled: boolean; minRelativeIntensity: number; minPeakDistanceDa: number };
 
   // simple monoisotopic filtering (deisotoping)
