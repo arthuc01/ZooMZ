@@ -19,12 +19,22 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
   }
 
   const top = result.rankedTaxa[0];
+  const qSample = Number.isFinite(result.fdr?.qSample ?? NaN) ? result.fdr?.qSample ?? null : null;
+  const confidenceLabel = qSample == null
+    ? "Unknown"
+    : (qSample <= 0.01 ? "High" : (qSample <= 0.05 ? "Medium" : "Low"));
+  const confidenceClass = qSample == null
+    ? "badge"
+    : (confidenceLabel === "High" ? "badge good" : (confidenceLabel === "Medium" ? "badge warn" : "badge bad"));
 
   return (
     <div className="card">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontWeight: 700 }}>Results</div>
-        <span className="badge warn">{top ? `Top corr: ${top.correlation.toFixed(3)}` : "—"}</span>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <span className={confidenceClass}>{confidenceLabel}</span>
+          <span className="badge warn">{top ? `Top corr: ${top.correlation.toFixed(3)}` : "-"}</span>
+        </div>
       </div>
 
       <div className="kv" style={{ marginTop: 10 }}>
