@@ -3,7 +3,9 @@ import type { AnalysisResult, MarkerMatchRow } from "../engine/types";
 
 type Props = { result: AnalysisResult | null; taxonId: string | null };
 
+// Render marker match details for a selected taxon.
 export default function MarkerMatchTable({ result, taxonId }: Props) {
+  // Derive match rows for the selected taxon.
   const rows: MarkerMatchRow[] = useMemo(() => {
     if (!result || !taxonId) return [];
     return result.taxonMatchesTop[taxonId] ?? [];

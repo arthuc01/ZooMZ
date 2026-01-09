@@ -10,6 +10,7 @@ type Props = {
   displayNormalizeToMax: boolean;
 };
 
+// Convert typed arrays to plain arrays, optionally normalizing intensity.
 function toArrays(mz: Float64Array, intensity: Float64Array, normalizeToMax: boolean) {
   const x = Array.from(mz);
   let y = Array.from(intensity);
@@ -21,7 +22,9 @@ function toArrays(mz: Float64Array, intensity: Float64Array, normalizeToMax: boo
   return { x, y };
 }
 
+// Plot the spectrum with optional peaks, markers, and contaminants.
 export default function SpectrumPlot({ spectrum, result, taxonIdForMarkers, displayMode, displayNormalizeToMax }: Props) {
+  // Prepare the line series based on display mode.
   const line = useMemo(() => {
     if (!spectrum) return null;
 
@@ -35,6 +38,7 @@ export default function SpectrumPlot({ spectrum, result, taxonIdForMarkers, disp
     return toArrays(spectrum.mz, spectrum.intensity, displayNormalizeToMax);
   }, [spectrum, result, displayMode, displayNormalizeToMax]);
 
+  // Prepare marker/contaminant overlays for the selected taxon.
   const overlays = useMemo(() => {
     if (!result || !taxonIdForMarkers) return null;
 

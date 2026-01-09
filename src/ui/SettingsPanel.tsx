@@ -16,6 +16,7 @@ type Props = {
   onChangeDisplayNormalizeToMax: (v: boolean) => void;
 };
 
+// Render analysis and display settings controls.
 export default function SettingsPanel(props: Props) {
   const {
     manifest, selectedDbFile, onSelectDbFile, db,

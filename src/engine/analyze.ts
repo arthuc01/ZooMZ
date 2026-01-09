@@ -3,6 +3,7 @@ import { cropSpectrum, normalizeToMax } from "./preprocess";
 import { keepMonoisotopicPeaks, pickPeaks } from "./peakPicking";
 import { markerMatchesForTaxon, matchContaminants, scoreTaxa } from "./speciescanScoring";
 
+// Run preprocessing, peak picking, and scoring for a single spectrum.
 export function analyzeSpectrum(spectrum: Spectrum, db: SpeciescanDb, contaminants: Contaminant[], params: AnalysisParams): AnalysisResult {
   // Crop first (for both plotting + peak picking)
   const cropped = cropSpectrum(spectrum.mz, spectrum.intensity, params.mzMin, params.mzMax);

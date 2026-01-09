@@ -8,12 +8,14 @@ export const DEFAULT_DEAMID_MARKERS = new Set<string>([
   "COL1a2_793___816",
 ]);
 
+// Clamp an integer to an inclusive range.
 function clampInt(v: number, lo: number, hi: number): number {
   if (v < lo) return lo;
   if (v > hi) return hi;
   return v;
 }
 
+// Mark a window around an m/z in a binned binary vector.
 function setWindowBinary(arr: Uint8Array, startMz: number, stepMz: number, mz: number, leftDa: number, rightDa: number) {
   const n = arr.length;
   const leftMz = mz + leftDa;
@@ -28,6 +30,7 @@ function setWindowBinary(arr: Uint8Array, startMz: number, stepMz: number, mz: n
   for (let i = i0; i <= i1; i++) arr[i] = 1;
 }
 
+// Build a binary presence vector for sample peaks on the scoring grid.
 export function buildSampleVector(peaks: Peak[], params: AnalysisParams): Uint8Array {
   const { startMz, endMz, stepMz } = params.grid;
   const n = Math.floor((endMz - startMz) / stepMz);
@@ -38,6 +41,7 @@ export function buildSampleVector(peaks: Peak[], params: AnalysisParams): Uint8A
   return x;
 }
 
+// Build a binary presence vector for a taxon's reference markers.
 export function buildTaxonVector(taxon: RefTaxon, params: AnalysisParams): Uint8Array {
   const { startMz, endMz, stepMz } = params.grid;
   const n = Math.floor((endMz - startMz) / stepMz);
@@ -51,6 +55,7 @@ export function buildTaxonVector(taxon: RefTaxon, params: AnalysisParams): Uint8
   return y;
 }
 
+// Compute Pearson correlation on binary vectors.
 export function pearsonCorrelationBinary(x: Uint8Array, y: Uint8Array): number {
   const n = x.length;
   if (y.length !== n) throw new Error("Vector length mismatch");
@@ -76,6 +81,7 @@ export function pearsonCorrelationBinary(x: Uint8Array, y: Uint8Array): number {
   return cov / Math.sqrt(varX * varY);
 }
 
+// Find the nearest peak to a target m/z within a tolerance window.
 function nearestPeakWithin(peaksSorted: Peak[], targetMz: number, leftDa: number, rightDa: number): Peak | null {
   const minMz = targetMz + leftDa;
   const maxMz = targetMz + rightDa;
@@ -98,6 +104,7 @@ function nearestPeakWithin(peaksSorted: Peak[], targetMz: number, leftDa: number
   return best;
 }
 
+// Match picked peaks to a taxon's markers with SpecieScan tolerances.
 export function markerMatchesForTaxon(peaks: Peak[], taxon: RefTaxon): MarkerMatchRow[] {
   const sorted = [...peaks].sort((a,b)=>a.mz-b.mz);
   return taxon.markers.map(m => {
@@ -115,6 +122,7 @@ export function markerMatchesForTaxon(peaks: Peak[], taxon: RefTaxon): MarkerMat
   });
 }
 
+// Score all taxa against a sample using binary correlation.
 export function scoreTaxa(peaks: Peak[], taxa: RefTaxon[], params: AnalysisParams): TaxonScore[] {
   const x = buildSampleVector(peaks, params);
 
@@ -129,6 +137,7 @@ export function scoreTaxa(peaks: Peak[], taxa: RefTaxon[], params: AnalysisParam
   return scores;
 }
 
+// Locate contaminant peaks within a symmetric tolerance window.
 export function matchContaminants(peaks: Peak[], contaminants: Contaminant[], tolDa: number): ContaminantHit[] {
   const sorted = [...peaks].sort((a,b)=>a.mz-b.mz);
   const hits: ContaminantHit[] = [];
@@ -141,6 +150,7 @@ export function matchContaminants(peaks: Peak[], contaminants: Contaminant[], to
   return hits;
 }
 
+// Collect matched peak m/z values (rounded) for quick lookup.
 export function matchedPeakMzSetFromMatches(rows: MarkerMatchRow[]): Set<number> {
   const s = new Set<number>();
   for (const r of rows) {

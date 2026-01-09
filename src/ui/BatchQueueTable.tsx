@@ -8,6 +8,7 @@ type Props = {
   onSelect: (id: string) => void;
 };
 
+// Render the batch queue with top-correlation summary per file.
 export default function BatchQueueTable({ spectra, results, selectedId, onSelect }: Props) {
   return (
     <div className="card">

@@ -2,6 +2,7 @@ import pako from "pako";
 import { uid } from "../utils/id";
 import type { Spectrum } from "./types";
 
+// Decode a base64 string to raw bytes.
 function base64ToBytes(b64: string): Uint8Array {
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
@@ -9,6 +10,7 @@ function base64ToBytes(b64: string): Uint8Array {
   return bytes;
 }
 
+// Decode base64 (optionally zlib) into a Float64Array.
 function decodeBinary(b64: string, dataType: "float32" | "float64", compressed: boolean): Float64Array {
   let bytes = base64ToBytes(b64.replace(/\s+/g, ""));
   if (compressed) bytes = pako.inflate(bytes);
@@ -23,10 +25,12 @@ function decodeBinary(b64: string, dataType: "float32" | "float64", compressed: 
   return out;
 }
 
+// Safely read trimmed text content from an element.
 function getText(el: Element | null): string {
   return (el?.textContent ?? "").trim();
 }
 
+// Parse a single-spectrum mzML document into m/z and intensity arrays.
 function parseMzML(xmlText: string): { mz: Float64Array; intensity: Float64Array } {
   const doc = new DOMParser().parseFromString(xmlText, "application/xml");
   const parserErr = doc.querySelector("parsererror");
@@ -82,6 +86,7 @@ function parseMzML(xmlText: string): { mz: Float64Array; intensity: Float64Array
   };
 }
 
+// Parse a single-scan mzXML document into m/z and intensity arrays.
 function parseMzXML(xmlText: string): { mz: Float64Array; intensity: Float64Array } {
   const doc = new DOMParser().parseFromString(xmlText, "application/xml");
   const parserErr = doc.querySelector("parsererror");
@@ -115,6 +120,7 @@ function parseMzXML(xmlText: string): { mz: Float64Array; intensity: Float64Arra
   return { mz, intensity };
 }
 
+// Load and parse an mzML/mzXML file into a Spectrum object.
 export async function parseSpectrumFile(file: File): Promise<Spectrum> {
   const name = file.name.toLowerCase();
   const text = await file.text();

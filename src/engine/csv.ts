@@ -1,3 +1,4 @@
+// Parse CSV text into a 2D array with basic quoting support.
 export function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
@@ -5,7 +6,9 @@ export function parseCsv(text: string): string[][] {
   let i = 0;
   let inQuotes = false;
 
+  // Append the current field buffer to the active row.
   const pushField = () => { row.push(field); field = ""; };
+  // Append the active row to the output and reset.
   const pushRow = () => { rows.push(row); row = []; };
 
   while (i < text.length) {
@@ -36,6 +39,7 @@ export function parseCsv(text: string): string[][] {
   return rows;
 }
 
+// Parse a numeric cell value, returning null when empty or invalid.
 export function toNumberMaybe(s: string): number | null {
   const t = (s ?? "").trim();
   if (!t) return null;

@@ -2,16 +2,19 @@ import { uid } from "../utils/id";
 import type { Contaminant, DbManifest, RefMarker, RefTaxon, SpeciescanDb } from "./types";
 import { parseCsv, toNumberMaybe } from "./csv";
 
+// Build a reference DB URL relative to the app root.
 function refDbUrl(path: string): string {
   return `reference_dbs/${path}`;
 }
 
+// Load the reference DB manifest JSON.
 export async function loadManifest(): Promise<DbManifest> {
   const res = await fetch(refDbUrl("manifest.json"));
   if (!res.ok) throw new Error("Failed to load DB manifest");
   return (await res.json()) as DbManifest;
 }
 
+// Load a Speciescan-style CSV and map it to internal DB structures.
 export async function loadSpeciescanDb(label: string, file: string): Promise<SpeciescanDb> {
   const res = await fetch(refDbUrl(file));
   if (!res.ok) throw new Error(`Failed to load reference DB: ${file}`);
@@ -52,7 +55,9 @@ export async function loadSpeciescanDb(label: string, file: string): Promise<Spe
   return { meta: { label, file }, taxa, markerNames };
 }
 
+// Load the contaminants list CSV, returning empty when missing.
 export async function loadContaminants(file: string): Promise<Contaminant[]> {
+  // Load contaminants list; fall back to empty if missing.
   const res = await fetch(refDbUrl(file));
   if (!res.ok) return [];
   const text = await res.text();

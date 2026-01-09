@@ -7,6 +7,7 @@ type Props = {
   onSelectTaxon: (id: string) => void;
 };
 
+// Render ranked taxa results and selector for marker inspection.
 export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }: Props) {
   if (!result) {
     return (

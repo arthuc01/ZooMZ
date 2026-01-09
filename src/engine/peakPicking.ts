@@ -1,5 +1,6 @@
 import type { Peak } from "./types";
 
+// Pick local maxima above a relative intensity threshold.
 export function pickPeaks(
   mz: Float64Array,
   intensity: Float64Array,

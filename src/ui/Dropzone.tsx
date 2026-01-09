@@ -2,13 +2,16 @@ import React, { useCallback } from "react";
 
 type Props = { onFiles: (files: File[]) => void };
 
+// File drop/picker control for mzML/mzXML uploads.
 export default function Dropzone({ onFiles }: Props) {
+  // Handle drag-and-drop file selection.
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files || []);
     if (files.length) onFiles(files);
   }, [onFiles]);
 
+  // Handle file input selection.
   const onPick = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length) onFiles(files);

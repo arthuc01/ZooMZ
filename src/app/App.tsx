@@ -23,6 +23,7 @@ const DEFAULT_PARAMS: AnalysisParams = {
   contaminantsToleranceDa: 0.3
 };
 
+// Top-level app component for ZooMS analysis workflow.
 export default function App() {
   const [manifest, setManifest] = useState<DbManifest | null>(null);
   const [selectedDbFile, setSelectedDbFile] = useState<string | null>(null);
@@ -47,6 +48,7 @@ export default function App() {
   const selectedSpectrum = useMemo(() => spectra.find(s => s.id === selectedId) ?? null, [spectra, selectedId]);
   const selectedResult = useMemo(() => (selectedId ? results[selectedId] ?? null : null), [results, selectedId]);
 
+  // Load manifest and default DB on first render.
   useEffect(() => {
     (async () => {
       const m = await loadManifest();
@@ -62,10 +64,12 @@ export default function App() {
     })().catch(e => setError(String((e as any)?.message ?? e)));
   }, []);
 
+  // Keep the inspected taxon in sync with the current result.
   useEffect(() => {
     if (selectedResult?.rankedTaxa?.length) setInspectTaxonId(selectedResult.rankedTaxa[0].taxonId);
   }, [selectedResult]);
 
+  // Reload reference DB and contaminants when selection changes.
   async function reloadDb(file: string | null) {
     if (!manifest || !file) return;
     setError(null);
@@ -86,6 +90,7 @@ export default function App() {
     }
   }
 
+  // Parse uploaded files and append to the batch list.
   async function onFiles(files: File[]) {
     setError(null);
     setBusy(true);
@@ -101,6 +106,7 @@ export default function App() {
     }
   }
 
+  // Run analysis for selected spectra or a supplied id list.
   async function runAnalysis(ids?: string[]) {
     if (!db) return;
     setError(null);
@@ -131,13 +137,16 @@ export default function App() {
     }
   }
 
+  // Queue analysis for all spectra in the batch.
   function runAll() {
     runAnalysis(spectra.map(s => s.id));
   }
 
+  // Export marker matches for the selected taxon as CSV.
   function exportSelected() {
     if (!selectedSpectrum || !selectedResult || !inspectTaxonId) return;
     const rows = selectedResult.taxonMatchesTop[inspectTaxonId] ?? [];
+    // Escape CSV cells safely.
     const csvEscape = (value: string) => {
       const needsQuotes = /[",\r\n]/.test(value);
       const escaped = value.replace(/"/g, '""');

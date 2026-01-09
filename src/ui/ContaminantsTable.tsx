@@ -3,6 +3,7 @@ import type { AnalysisResult } from "../engine/types";
 
 type Props = { result: AnalysisResult | null };
 
+// Render contaminant matches for the current analysis result.
 export default function ContaminantsTable({ result }: Props) {
   if (!result) {
     return (
