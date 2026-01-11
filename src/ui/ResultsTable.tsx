@@ -28,7 +28,9 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
   const matchedMarkers = markerRows.filter(m => m.matched && m.matchedPeakMz != null).length;
   const confidence = computeConfidence({
     bestScore: top?.correlation ?? null,
+    bestLabel: top?.taxonLabel ?? null,
     secondScore: second?.correlation ?? null,
+    secondLabel: second?.taxonLabel ?? null,
     bestDecoyScore: result.fdr?.bestDecoyScore ?? null,
     qSample: result.fdr?.qSample ?? null,
     matchedMarkers,

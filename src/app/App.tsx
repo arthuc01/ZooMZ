@@ -514,7 +514,9 @@ export default function App() {
       const qSample = Number.isFinite(fdr?.qSample ?? NaN) ? fdr?.qSample ?? null : null;
       const confidence = computeConfidence({
         bestScore: top?.correlation ?? null,
+        bestLabel: top?.taxonLabel ?? null,
         secondScore: r?.rankedTaxa?.[1]?.correlation ?? null,
+        secondLabel: r?.rankedTaxa?.[1]?.taxonLabel ?? null,
         bestDecoyScore: fdr?.bestDecoyScore ?? null,
         qSample: fdr?.qSample ?? null,
         matchedMarkers: markersMatchedTop,

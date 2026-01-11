@@ -2,7 +2,9 @@ export type ConfidenceLevel = "High" | "Medium" | "Low" | "Rejected" | "Unknown"
 
 export type ConfidenceInput = {
   bestScore: number | null;
+  bestLabel?: string | null;
   secondScore?: number | null;
+  secondLabel?: string | null;
   bestDecoyScore: number | null;
   qSample: number | null;
   matchedMarkers?: number | null;
@@ -19,6 +21,9 @@ export type ConfidenceResult = {
 const DECOY_MIN = 0.01;
 const SCORE_FLOOR_HIGH = 0.03;
 const SCORE_FLOOR_MED = 0.02;
+const GAP_HIGH = 0.15;
+const GAP_MED = 0.10;
+const GAP_LOW = 0.05;
 
 function downgrade(level: ConfidenceLevel): ConfidenceLevel {
   if (level === "High") return "Medium";
@@ -32,6 +37,8 @@ export function computeConfidence(input: ConfidenceInput): ConfidenceResult {
   const secondScore = Number.isFinite(input.secondScore ?? NaN) ? (input.secondScore as number) : null;
   const bestDecoyScore = Number.isFinite(input.bestDecoyScore ?? NaN) ? (input.bestDecoyScore as number) : null;
   const qSample = Number.isFinite(input.qSample ?? NaN) ? (input.qSample as number) : null;
+  const bestLabel = (input.bestLabel ?? "").trim();
+  const secondLabel = (input.secondLabel ?? "").trim();
 
   const ratio = bestDecoyScore != null && bestDecoyScore > 0 && bestScore != null
     ? bestScore / bestDecoyScore
@@ -50,14 +57,18 @@ export function computeConfidence(input: ConfidenceInput): ConfidenceResult {
   }
 
   let tier: ConfidenceLevel = "Rejected";
+  if (decoyGap != null && qSample <= 0.01 && decoyGap >= GAP_HIGH) {
+    tier = "High";
+  }
+
   if (bestDecoyScore >= DECOY_MIN && ratio != null) {
-    if (ratio >= 4.0 && bestScore >= SCORE_FLOOR_HIGH) tier = "High";
-    else if (ratio >= 2.5 && bestScore >= SCORE_FLOOR_MED) tier = "Medium";
-    else if (ratio >= 1.5) tier = "Low";
+    if (ratio >= 2.5 && bestScore >= SCORE_FLOOR_HIGH) tier = "High";
+    else if (ratio >= 1.8 && bestScore >= SCORE_FLOOR_MED) tier = "Medium";
+    else if (ratio >= 1.3) tier = "Low";
   } else if (decoyGap != null) {
-    if (decoyGap >= 0.03) tier = "High";
-    else if (decoyGap >= 0.02) tier = "Medium";
-    else if (decoyGap >= 0.01) tier = "Low";
+    if (decoyGap >= GAP_HIGH) tier = "High";
+    else if (decoyGap >= GAP_MED) tier = "Medium";
+    else if (decoyGap >= GAP_LOW) tier = "Low";
   }
 
   if (tier === "Rejected") {
@@ -65,7 +76,7 @@ export function computeConfidence(input: ConfidenceInput): ConfidenceResult {
     return { confidenceLevel: "Rejected", ratio, decoyGap, targetGap, notes: notes.join("; ") };
   }
 
-  if (targetGap != null && targetGap < 0.01) {
+  if (targetGap != null && targetGap < 0.01 && bestLabel !== secondLabel) {
     tier = downgrade(tier);
     notes.push("Top hit close to second-best (ambiguous).");
   }

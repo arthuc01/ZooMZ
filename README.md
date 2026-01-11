@@ -29,9 +29,7 @@ This app supports:
 Folder processing is intended for high-throughput validation runs (hundreds/thousands of spectra).
 
 FDR confidence thresholds used in the app:
-- High confidence: qSample <= 0.01
-- Medium confidence: qSample <= 0.05
-- Low confidence: qSample > 0.05
+- FDR gate: qSample > 0.05 => Rejected (not acceptable)
 - Decoy gap is the difference between the top real score and the best decoy score; larger gaps indicate stronger separation, while zero/negative gaps suggest weak confidence.
 
 ## Confidence estimation
@@ -43,6 +41,21 @@ Procedure summary:
 - Separation from decoys: use best_score / best_decoy_score (or best_score - best_decoy_score when decoy scores are very small)
 - Taxonomic discrimination: down-weight when top and second-best taxa are very close
 - Evidence sufficiency (optional): down-weight if very few markers support the call
+
+Ratio thresholds (when best_decoy_score >= 0.01):
+- High: ratio >= 2.5 and best_score >= 0.03
+- Medium: ratio >= 1.8 and best_score >= 0.02
+- Low: ratio >= 1.3
+- Rejected: otherwise
+
+Gap thresholds (when best_decoy_score < 0.01):
+- High: decoy_gap >= 0.15
+- Medium: 0.10 <= decoy_gap < 0.15
+- Low: 0.05 <= decoy_gap < 0.10
+- Rejected: decoy_gap < 0.05
+
+Override:
+- If qSample <= 0.01 and decoy_gap >= 0.15, confidence is forced to High.
 
 Confidence	Interpretation
 High	Strongly above decoys and clearly separated from alternative taxa
