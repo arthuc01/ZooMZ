@@ -34,7 +34,7 @@
       "file": "Xenarthrans_reference_db.csv"
     },
     {
-      "label": "In Silico Search",
+      "label": "In silico (Expt)",
       "file": "speciescan_in_silico_markers_ZooMS_taxon.csv"
     }
   ],
