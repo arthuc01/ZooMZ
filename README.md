@@ -56,6 +56,7 @@ Gap thresholds (when best_decoy_score < 0.01):
 
 Override:
 - If qSample <= 0.01 and decoy_gap >= 0.15, confidence is forced to High.
+Strong separation from decoys (low q and large decoy gap) is decisive; close scores among top taxa may be flagged as ambiguity but will not demote a strongly supported identification.
 
 Confidence	Interpretation
 High	Strongly above decoys and clearly separated from alternative taxa

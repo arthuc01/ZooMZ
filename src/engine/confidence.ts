@@ -56,10 +56,8 @@ export function computeConfidence(input: ConfidenceInput): ConfidenceResult {
     return { confidenceLevel: "Rejected", ratio, decoyGap, targetGap, notes: notes.join("; ") };
   }
 
+  const hasStrongDecoySupport = decoyGap != null && qSample <= 0.01 && decoyGap >= GAP_HIGH;
   let tier: ConfidenceLevel = "Rejected";
-  if (decoyGap != null && qSample <= 0.01 && decoyGap >= GAP_HIGH) {
-    tier = "High";
-  }
 
   if (bestDecoyScore >= DECOY_MIN && ratio != null) {
     if (ratio >= 2.5 && bestScore >= SCORE_FLOOR_HIGH) tier = "High";
@@ -71,12 +69,16 @@ export function computeConfidence(input: ConfidenceInput): ConfidenceResult {
     else if (decoyGap >= GAP_LOW) tier = "Low";
   }
 
+  if (hasStrongDecoySupport && tier !== "Rejected") {
+    tier = "High";
+  }
+
   if (tier === "Rejected") {
     notes.push("Insufficient separation from decoys.");
     return { confidenceLevel: "Rejected", ratio, decoyGap, targetGap, notes: notes.join("; ") };
   }
 
-  if (targetGap != null && targetGap < 0.01 && bestLabel !== secondLabel) {
+  if (!hasStrongDecoySupport && targetGap != null && targetGap < 0.01 && bestLabel !== secondLabel) {
     tier = downgrade(tier);
     notes.push("Top hit close to second-best (ambiguous).");
   }
