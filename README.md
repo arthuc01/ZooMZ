@@ -15,6 +15,7 @@ This app supports:
 - Batch Excel export with QC summary, marker matches, and contaminants
 - Confidence labels (High/Medium/Low) in results tables
 - Note: expected input files are single-scan MALDI MS (multi-scan mzML is not supported)
+- See Settings and QC explanations: [Settings_QC.md](Settings_QC.md)
 
 FDR confidence thresholds used in the app:
 - High confidence: qSample <= 0.01
