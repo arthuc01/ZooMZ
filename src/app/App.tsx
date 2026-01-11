@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Dropzone from "../ui/Dropzone";
 import SpectrumPlot from "../ui/SpectrumPlot";
 import ResultsTable from "../ui/ResultsTable";
@@ -48,6 +48,14 @@ export default function App() {
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [processingErrors, setProcessingErrors] = useState<{ filename: string; error: string; sourceMode: string; sourcePath: string }[]>([]);
+  const [folderRun, setFolderRun] = useState<{ active: boolean; total: number; processed: number; folderLabel: string }>({
+    active: false,
+    total: 0,
+    processed: 0,
+    folderLabel: ""
+  });
+  const cancelFolderRef = useRef(false);
 
   const selectedSpectrum = useMemo(() => spectra.find(s => s.id === selectedId) ?? null, [spectra, selectedId]);
   const selectedResult = useMemo(() => (selectedId ? results[selectedId] ?? null : null), [results, selectedId]);
@@ -137,7 +145,11 @@ export default function App() {
     setBusy(true);
     try {
       const parsed: Spectrum[] = [];
-      for (const f of files) parsed.push(await parseSpectrumFile(f));
+      const mode = files.length > 1 ? "batch_upload" : "single";
+      for (const f of files) {
+        const s = await parseSpectrumFile(f);
+        parsed.push({ ...s, sourceMode: mode, sourcePath: "" });
+      }
       setSpectra(prev => [...prev, ...parsed]);
       if (parsed.length) setSelectedId(parsed[0].id);
     } catch (e: any) {
@@ -145,6 +157,69 @@ export default function App() {
     } finally {
       setBusy(false);
     }
+  }
+
+  function getFolderLabel(file: File): string {
+    const rel = (file as any)?.webkitRelativePath as string | undefined;
+    if (!rel) return "";
+    const parts = rel.split("/");
+    return parts.length ? parts[0] : "";
+  }
+
+  async function onFolderFiles(files: File[]) {
+    if (!db) {
+      setError("Load a reference DB before processing a folder.");
+      return;
+    }
+    const supported = files.filter(f => /\.(mzml|mzxml)$/i.test(f.name));
+    if (!supported.length) {
+      setError("No supported files found in the selected folder.");
+      return;
+    }
+
+    const folderLabel = getFolderLabel(supported[0]) || "Selected folder";
+    setFolderRun({ active: true, total: supported.length, processed: 0, folderLabel });
+    setProcessingErrors([]);
+    setError(null);
+    setBusy(true);
+    cancelFolderRef.current = false;
+
+    for (let i = 0; i < supported.length; i++) {
+      if (cancelFolderRef.current) break;
+      const file = supported[i];
+      try {
+        const parsed = await parseSpectrumFile(file);
+        const result = analyzeSpectrum(parsed, db, contaminants, params, decoyTaxa);
+        const lightResult: AnalysisResult = {
+          ...result,
+          rawMz: new Float64Array(0),
+          rawIntensity: new Float64Array(0),
+          processedMz: new Float64Array(0),
+          processedIntensity: new Float64Array(0),
+          peaks: [],
+        };
+        setResults(prev => ({ ...prev, [parsed.id]: lightResult }));
+        setSpectra(prev => [
+          ...prev,
+          { id: parsed.id, filename: parsed.filename, mz: new Float64Array(0), intensity: new Float64Array(0), centroided: parsed.centroided, sourceMode: "folder", sourcePath: folderLabel }
+        ]);
+      } catch (e: any) {
+        setProcessingErrors(prev => [
+          ...prev,
+          { filename: file.name, error: String(e?.message ?? e), sourceMode: "folder", sourcePath: folderLabel }
+        ]);
+      } finally {
+        setFolderRun(prev => ({ ...prev, processed: prev.processed + 1 }));
+      }
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+
+    setFolderRun(prev => ({ ...prev, active: false }));
+    setBusy(false);
+  }
+
+  function cancelFolderRun() {
+    cancelFolderRef.current = true;
   }
 
   // Run analysis for selected spectra or a supplied id list.
@@ -357,6 +432,8 @@ export default function App() {
     const qcHeader = [
       "spectrumId",
       "filename",
+      "source_mode",
+      "source_path",
       "db_label",
       "db_file",
       "mzMin",
@@ -461,6 +538,8 @@ export default function App() {
       return {
         spectrumId: s.id,
         filename: s.filename,
+        source_mode: s.sourceMode ?? null,
+        source_path: s.sourcePath ?? null,
         db_label: db?.meta.label ?? null,
         db_file: db?.meta.file ?? null,
         mzMin: qc?.mzMin ?? params.mzMin,
@@ -550,6 +629,16 @@ export default function App() {
     const qcMarkerSheet = XLSX.utils.json_to_sheet(qcMarkerRows, { header: [...qcMarkerHeader] });
     XLSX.utils.book_append_sheet(workbook, qcMarkerSheet, "QC Markers");
 
+    if (processingErrors.length) {
+      const errorRows = processingErrors.map(e => ({
+        filename: e.filename,
+        error: e.error,
+        source_mode: e.sourceMode,
+        source_path: e.sourcePath
+      }));
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(errorRows), "Errors");
+    }
+
     XLSX.writeFile(workbook, "ZooMZ_results.xlsx");
   }
 
@@ -581,7 +670,15 @@ export default function App() {
         </div>
       )}
 
-      <Dropzone onFiles={onFiles} />
+      <Dropzone onFiles={onFiles} onFolderFiles={onFolderFiles} />
+      {folderRun.total > 0 && (
+        <div className="small" style={{ marginTop: 8 }}>
+          Folder: <b>{folderRun.folderLabel}</b> · Processed {folderRun.processed} / {folderRun.total}
+          {folderRun.active && (
+            <button className="btn" style={{ marginLeft: 8 }} onClick={cancelFolderRun}>Cancel</button>
+          )}
+        </div>
+      )}
 
       <div className="row" style={{ marginTop: 12 }}>
         <div className="col left" style={{ gap: 20 }}>

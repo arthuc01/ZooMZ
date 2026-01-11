@@ -53,11 +53,15 @@ export default function SpectrumPlot({ spectrum, result, taxonIdForMarkers, disp
     return { markerRows, matched, matchedSet };
   }, [result, taxonIdForMarkers]);
 
-  if (!spectrum || !line) {
+  if (!spectrum || !line || spectrum.mz.length === 0) {
     return (
       <div className="card">
         <div style={{ fontWeight: 800 }}>Spectrum</div>
-        <div className="small" style={{ marginTop: 6 }}>Load an mzML/mzXML file to view spectrum.</div>
+        <div className="small" style={{ marginTop: 6 }}>
+          {spectrum?.sourceMode === "folder"
+            ? "Folder-processed spectra do not retain raw data for plotting."
+            : "Load an mzML/mzXML file to view spectrum."}
+        </div>
       </div>
     );
   }

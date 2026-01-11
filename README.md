@@ -17,6 +17,17 @@ This app supports:
 - Note: expected input files are single-scan MALDI MS (multi-scan mzML is not supported)
 - See Settings and QC explanations: [Settings_QC.md](Settings_QC.md)
 
+## How to run analyses
+
+- Single sample
+  Upload one mzML/mzXML and run once to inspect the spectrum and results interactively.
+- Small batch (uploaded files)
+  Multi-select uploads and run; results append as multiple rows in the output Excel.
+- Folder processing
+  Select a local folder containing many mzML/mzXML files (for example, Zenodo datasets). The app processes every spectrum found and appends one row per file to the output Excel. Errors are logged per-file and do not stop the run.
+
+Folder processing is intended for high-throughput validation runs (hundreds/thousands of spectra).
+
 FDR confidence thresholds used in the app:
 - High confidence: qSample <= 0.01
 - Medium confidence: qSample <= 0.05

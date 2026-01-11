@@ -4,6 +4,8 @@ export type Spectrum = {
   mz: Float64Array;
   intensity: Float64Array;
   centroided?: boolean;
+  sourceMode?: "single" | "batch_upload" | "folder";
+  sourcePath?: string;
 };
 
 export type Peak = { mz: number; intensity: number };
