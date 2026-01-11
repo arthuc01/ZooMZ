@@ -1,5 +1,6 @@
 import React from "react";
 import type { AnalysisResult } from "../engine/types";
+import { computeConfidence } from "../engine/confidence";
 
 type Props = {
   result: AnalysisResult | null;
@@ -19,14 +20,23 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
   }
 
   const top = result.rankedTaxa[0];
+  const second = result.rankedTaxa[1];
   const qSample = Number.isFinite(result.fdr?.qSample ?? NaN) ? result.fdr?.qSample ?? null : null;
   const hasFdr = (result.fdr?.nDecoys ?? 0) > 0 && qSample != null;
-  const confidenceLabel = qSample == null
-    ? "Unknown"
-    : (qSample <= 0.01 ? "High" : (qSample <= 0.05 ? "Medium" : "Low"));
-  const confidenceClass = qSample == null
-    ? "badge"
-    : (confidenceLabel === "High" ? "badge good" : (confidenceLabel === "Medium" ? "badge warn" : "badge bad"));
+  const topTaxonId = top?.taxonId ?? null;
+  const markerRows = topTaxonId ? (result.taxonMatchesTop[topTaxonId] ?? []) : [];
+  const matchedMarkers = markerRows.filter(m => m.matched && m.matchedPeakMz != null).length;
+  const confidence = computeConfidence({
+    bestScore: top?.correlation ?? null,
+    secondScore: second?.correlation ?? null,
+    bestDecoyScore: result.fdr?.bestDecoyScore ?? null,
+    qSample: result.fdr?.qSample ?? null,
+    matchedMarkers,
+  });
+  const confidenceLabel = confidence.confidenceLevel;
+  const confidenceClass = confidenceLabel === "High"
+    ? "badge good"
+    : (confidenceLabel === "Medium" ? "badge warn" : (confidenceLabel === "Low" ? "badge bad" : (confidenceLabel === "Rejected" ? "badge bad" : "badge")));
 
   return (
     <div className="card">
@@ -59,7 +69,7 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
               <th>Rank</th>
               <th>Taxon</th>
               <th>Correlation</th>
-              <th>Confidence</th>
+              <th title="Confidence reflects separation from decoy matches and competing taxa, not just statistical significance.">Confidence</th>
             </tr>
           </thead>
           <tbody>

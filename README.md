@@ -23,6 +23,24 @@ FDR confidence thresholds used in the app:
 - Low confidence: qSample > 0.05
 - Decoy gap is the difference between the top real score and the best decoy score; larger gaps indicate stronger separation, while zero/negative gaps suggest weak confidence.
 
+## Confidence estimation
+
+Confidence levels reflect separation from random matches and from competing taxa, not a single statistical probability.
+
+Procedure summary:
+- FDR control (q-value): reject if qSample > 0.05
+- Separation from decoys: use best_score / best_decoy_score (or best_score - best_decoy_score when decoy scores are very small)
+- Taxonomic discrimination: down-weight when top and second-best taxa are very close
+- Evidence sufficiency (optional): down-weight if very few markers support the call
+
+Confidence	Interpretation
+High	Strongly above decoys and clearly separated from alternative taxa
+Medium	Above decoys but limited separation or moderate ambiguity
+Low	Statistically admissible but weak separation or sparse evidence
+Rejected	Not convincingly above random matches
+
+Confidence labels are intended as interpretive guidance, not exact probabilities.
+
 
 ## Run
 

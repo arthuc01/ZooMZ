@@ -13,6 +13,7 @@ import { parseSpectrumFile } from "../engine/parse";
 import { analyzeSpectrum } from "../engine/analyze";
 import { loadContaminants, loadManifest, loadSpeciescanDb } from "../engine/speciescanDb";
 import { buildDecoyTaxa } from "../engine/decoys";
+import { computeConfidence } from "../engine/confidence";
 
 const DEFAULT_PARAMS: AnalysisParams = {
   mzMin: 500,
@@ -386,11 +387,15 @@ export default function App() {
       "medianMatchedIntensityTop",
       "contaminantsMatched",
       "maxContaminantIntensity",
+      "confidence_level",
+      "ratio",
+      "decoy_gap",
+      "target_gap",
+      "confidence_notes",
       "nDecoys",
       "bestDecoyScore",
       "decoyGap",
       "qSample",
-      "confidenceLabel",
       "qcFlag",
       "qcNotes",
     ] as const;
@@ -430,9 +435,13 @@ export default function App() {
 
       const fdr = r?.fdr;
       const qSample = Number.isFinite(fdr?.qSample ?? NaN) ? fdr?.qSample ?? null : null;
-      const confidenceLabel = qSample == null
-        ? null
-        : (qSample <= 0.01 ? "High" : (qSample <= 0.05 ? "Medium" : "Low"));
+      const confidence = computeConfidence({
+        bestScore: top?.correlation ?? null,
+        secondScore: r?.rankedTaxa?.[1]?.correlation ?? null,
+        bestDecoyScore: fdr?.bestDecoyScore ?? null,
+        qSample: fdr?.qSample ?? null,
+        matchedMarkers: markersMatchedTop,
+      });
 
       const qcNotes: string[] = [];
       let qcFlag: "OK" | "WARN" | "FAIL" = "OK";
@@ -482,11 +491,15 @@ export default function App() {
         medianMatchedIntensityTop,
         contaminantsMatched,
         maxContaminantIntensity,
+        confidence_level: confidence.confidenceLevel,
+        ratio: confidence.ratio,
+        decoy_gap: confidence.decoyGap,
+        target_gap: confidence.targetGap,
+        confidence_notes: confidence.notes,
         nDecoys: fdr?.nDecoys ?? 0,
         bestDecoyScore: Number.isFinite(fdr?.bestDecoyScore ?? NaN) ? fdr?.bestDecoyScore ?? null : null,
         decoyGap: Number.isFinite(fdr?.decoyGap ?? NaN) ? fdr?.decoyGap ?? null : null,
         qSample,
-        confidenceLabel,
         qcFlag,
         qcNotes: qcNotes.join("; "),
       };
