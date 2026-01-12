@@ -9,6 +9,8 @@ type Props = {
   params: AnalysisParams;
   onChange: (p: AnalysisParams) => void;
   onReloadDb: () => void;
+  onExportSettings: () => void;
+  onImportSettings: (file: File) => void;
 
   displayMode: "raw" | "processed";
   onChangeDisplayMode: (m: "raw" | "processed") => void;
@@ -21,16 +23,22 @@ export default function SettingsPanel(props: Props) {
   const {
     manifest, selectedDbFile, onSelectDbFile, db,
     params, onChange, onReloadDb,
+    onExportSettings, onImportSettings,
     displayMode, onChangeDisplayMode,
     displayNormalizeToMax, onChangeDisplayNormalizeToMax
   } = props;
 
   return (
-    <div className="card">
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+    <details className="card" open>
+      <summary style={{ display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }}>
         <div style={{ fontWeight: 800 }}>Settings</div>
-        <button className="btn" onClick={onReloadDb}>Reload DB</button>
-      </div>
+        <button
+          className="btn"
+          onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); onReloadDb(); }}
+        >
+          Reload DB
+        </button>
+      </summary>
 
       <div className="small" style={{ marginTop: 6 }} title="Select the Speciescan-style reference database used for scoring.">Reference DB</div>
       <select
@@ -327,6 +335,22 @@ export default function SettingsPanel(props: Props) {
           Loaded: <b>{db.meta.label}</b> — {db.taxa.length} taxa, {db.markerNames.length} markers
         </div>
       )}
-    </div>
+      <div style={{ display:"flex", gap: 8, marginTop: 12 }}>
+        <button className="btn" onClick={onExportSettings}>Export settings (JSON)</button>
+        <label className="btn" style={{ display:"inline-flex", alignItems:"center", gap:8 }}>
+          Import settings (JSON)
+          <input
+            type="file"
+            accept=".json,application/json"
+            onChange={(e)=>{
+              const file = e.target.files?.[0];
+              if (file) onImportSettings(file);
+              e.target.value = "";
+            }}
+            style={{ display:"none" }}
+          />
+        </label>
+      </div>
+    </details>
   );
 }

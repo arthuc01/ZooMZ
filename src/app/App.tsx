@@ -14,12 +14,13 @@ import { analyzeSpectrum } from "../engine/analyze";
 import { loadContaminants, loadManifest, loadSpeciescanDb } from "../engine/speciescanDb";
 import { buildDecoyTaxa } from "../engine/decoys";
 import { computeConfidence } from "../engine/confidence";
+import { downloadText } from "../utils/download";
 
 const DEFAULT_PARAMS: AnalysisParams = {
   mzMin: 500,
   mzMax: 3500,
-  preprocess: { enabled: true, normalizeToMax: true, baselineSubtract: { enabled: false, iterations: 50 } },
-  peakPicking: { enabled: true, minRelativeIntensity: 0.05, minPeakDistanceDa: 0.8 },
+  preprocess: { enabled: true, normalizeToMax: true, baselineSubtract: { enabled: true, iterations: 50 } },
+  peakPicking: { enabled: true, minRelativeIntensity: 0.1, minPeakDistanceDa: 0.8 },
   monoisotopic: { enabled: true, toleranceDa: 0.2, distanceDa: 1.00235, maxIsotopes: 5 },
   grid: { startMz: 500, endMz: 3500, stepMz: 0.1 },
   contaminantsToleranceDa: 0.3,
@@ -280,6 +281,53 @@ export default function App() {
     const q1Idx = Math.floor((sorted.length - 1) * 0.25);
     const q3Idx = Math.floor((sorted.length - 1) * 0.75);
     return sorted[q3Idx] - sorted[q1Idx];
+  }
+
+  function normalizeParams(next: Partial<AnalysisParams>): AnalysisParams {
+    return {
+      ...DEFAULT_PARAMS,
+      ...next,
+      preprocess: {
+        ...DEFAULT_PARAMS.preprocess,
+        ...(next.preprocess ?? {}),
+        baselineSubtract: {
+          ...DEFAULT_PARAMS.preprocess.baselineSubtract,
+          ...(next.preprocess?.baselineSubtract ?? {})
+        }
+      },
+      peakPicking: {
+        ...DEFAULT_PARAMS.peakPicking,
+        ...(next.peakPicking ?? {})
+      },
+      monoisotopic: {
+        ...DEFAULT_PARAMS.monoisotopic,
+        ...(next.monoisotopic ?? {})
+      },
+      grid: {
+        ...DEFAULT_PARAMS.grid,
+        ...(next.grid ?? {})
+      },
+      fdr: {
+        ...DEFAULT_PARAMS.fdr,
+        ...(next.fdr ?? {})
+      }
+    };
+  }
+
+  function exportSettings() {
+    const json = JSON.stringify(params, null, 2);
+    downloadText("ZooMZ_settings.json", json, "application/json");
+  }
+
+  async function importSettings(file: File) {
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      setParams(normalizeParams(parsed));
+      setError(null);
+    } catch (e: any) {
+      setError(`Failed to import settings: ${String(e?.message ?? e)}`);
+    }
   }
 
   // Export batch results to a multi-sheet Excel workbook.
@@ -706,6 +754,8 @@ export default function App() {
             params={params}
             onChange={setParams}
             onReloadDb={() => reloadDb(selectedDbFile)}
+            onExportSettings={exportSettings}
+            onImportSettings={importSettings}
             displayMode={displayMode}
             onChangeDisplayMode={setDisplayMode}
             displayNormalizeToMax={displayNormalizeToMax}
