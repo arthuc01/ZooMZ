@@ -320,7 +320,8 @@ export default function App() {
       params,
       displayMode,
       displayNormalizeToMax,
-      selectedDbFile
+      selectedDbFile: selectedDbFile ?? db?.meta.file ?? null,
+      selectedDbLabel: db?.meta.label ?? null
     };
     const json = JSON.stringify(payload, null, 2);
     downloadText("ZooMZ_settings.json", json, "application/json");
