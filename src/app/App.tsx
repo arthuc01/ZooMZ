@@ -315,7 +315,14 @@ export default function App() {
   }
 
   function exportSettings() {
-    const json = JSON.stringify(params, null, 2);
+    const payload = {
+      version: 1,
+      params,
+      displayMode,
+      displayNormalizeToMax,
+      selectedDbFile
+    };
+    const json = JSON.stringify(payload, null, 2);
     downloadText("ZooMZ_settings.json", json, "application/json");
   }
 
@@ -323,7 +330,23 @@ export default function App() {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      setParams(normalizeParams(parsed));
+      const maybeParams = parsed?.params ?? parsed;
+      setParams(normalizeParams(maybeParams));
+
+      if (typeof parsed?.displayMode === "string") {
+        const nextMode = parsed.displayMode === "raw" ? "raw" : "processed";
+        setDisplayMode(nextMode);
+      }
+      if (typeof parsed?.displayNormalizeToMax === "boolean") {
+        setDisplayNormalizeToMax(parsed.displayNormalizeToMax);
+      }
+      if (typeof parsed?.selectedDbFile === "string" && manifest?.databases?.length) {
+        const exists = manifest.databases.some(d => d.file === parsed.selectedDbFile);
+        if (exists) {
+          setSelectedDbFile(parsed.selectedDbFile);
+          reloadDb(parsed.selectedDbFile);
+        }
+      }
       setError(null);
     } catch (e: any) {
       setError(`Failed to import settings: ${String(e?.message ?? e)}`);
