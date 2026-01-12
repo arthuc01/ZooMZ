@@ -167,6 +167,14 @@ export default function App() {
     return parts.length ? parts[0] : "";
   }
 
+  function getRelativeFolderPath(file: File): string {
+    const rel = (file as any)?.webkitRelativePath as string | undefined;
+    if (!rel) return "";
+    const parts = rel.split("/");
+    if (parts.length <= 1) return "";
+    return parts.slice(0, -1).join("/");
+  }
+
   async function onFolderFiles(files: File[]) {
     if (!db) {
       setError("Load a reference DB before processing a folder.");
@@ -190,6 +198,7 @@ export default function App() {
       const file = supported[i];
       try {
         const parsed = await parseSpectrumFile(file);
+        const relativePath = getRelativeFolderPath(file);
         const result = analyzeSpectrum(parsed, db, contaminants, params, decoyTaxa);
         const lightResult: AnalysisResult = {
           ...result,
@@ -202,12 +211,21 @@ export default function App() {
         setResults(prev => ({ ...prev, [parsed.id]: lightResult }));
         setSpectra(prev => [
           ...prev,
-          { id: parsed.id, filename: parsed.filename, mz: new Float64Array(0), intensity: new Float64Array(0), centroided: parsed.centroided, sourceMode: "folder", sourcePath: folderLabel }
+          {
+            id: parsed.id,
+            filename: parsed.filename,
+            mz: new Float64Array(0),
+            intensity: new Float64Array(0),
+            centroided: parsed.centroided,
+            sourceMode: "folder",
+            sourcePath: relativePath || folderLabel
+          }
         ]);
       } catch (e: any) {
+        const relativePath = getRelativeFolderPath(file) || folderLabel;
         setProcessingErrors(prev => [
           ...prev,
-          { filename: file.name, error: String(e?.message ?? e), sourceMode: "folder", sourcePath: folderLabel }
+          { filename: file.name, error: String(e?.message ?? e), sourceMode: "folder", sourcePath: relativePath }
         ]);
       } finally {
         setFolderRun(prev => ({ ...prev, processed: prev.processed + 1 }));
@@ -428,40 +446,53 @@ export default function App() {
     }
     XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(topRows), "Top 10 Taxa");
 
-    // Sheet 2: marker matches for each sample's top-ranked taxon
+    // Sheet 2: marker matches (Speciescan-style, samples as rows)
     const markerNameOrder: string[] = [];
     const markerNames = new Set<string>();
-    const markerMaps = new Map<string, Map<string, { mz: number; intensity: number }>>();
+    const markerMaps = new Map<string, Map<string, number>>();
 
     for (const s of samples) {
       const r = results[s.id];
       const top = r?.rankedTaxa?.[0];
       const rows = top ? (r?.taxonMatchesTop[top.taxonId] ?? []) : [];
-      const m = new Map<string, { mz: number; intensity: number }>();
+      const m = new Map<string, number>();
       for (const row of rows) {
         if (!markerNames.has(row.markerName)) {
           markerNames.add(row.markerName);
           markerNameOrder.push(row.markerName);
         }
-        if (row.matchedPeakMz != null && row.matchedPeakIntensity != null) {
-          m.set(row.markerName, { mz: row.matchedPeakMz, intensity: row.matchedPeakIntensity });
+        if (row.matchedPeakMz != null) {
+          m.set(row.markerName, row.matchedPeakMz);
         }
       }
       markerMaps.set(s.id, m);
     }
 
-    const markerHeader = ["Marker", ...samples.map(s => s.filename)];
-    const markerRows: (string | number)[][] = [markerHeader];
-    for (const name of markerNameOrder) {
-      const row: (string | number)[] = [name];
-      for (const s of samples) {
-        const m = markerMaps.get(s.id);
-        const match = m?.get(name);
-        row.push(formatMatch(match?.mz, match?.intensity));
+    const speciescanHeader = [
+      "Sample",
+      ...markerNameOrder,
+      "ZooMS_taxon",
+      "Family",
+      "Order",
+      "Correlation"
+    ];
+    const speciescanRows: (string | number | null)[][] = [speciescanHeader];
+    for (const s of samples) {
+      const r = results[s.id];
+      const top = r?.rankedTaxa?.[0];
+      const taxon = top ? db?.taxa.find(t => t.id === top.taxonId) ?? null : null;
+      const m = markerMaps.get(s.id);
+      const row: (string | number | null)[] = [s.filename];
+      for (const name of markerNameOrder) {
+        row.push(m?.get(name) ?? null);
       }
-      markerRows.push(row);
+      row.push(top?.taxonLabel ?? null);
+      row.push(taxon?.family ?? null);
+      row.push(taxon?.order ?? null);
+      row.push(top?.correlation ?? null);
+      speciescanRows.push(row);
     }
-    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(markerRows), "Marker Matches");
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(speciescanRows), "Marker Matches");
 
     // Sheet 3: contaminants per sample
     const contaminantOrder: string[] = [];
