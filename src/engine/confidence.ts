@@ -24,6 +24,9 @@ const SCORE_FLOOR_MED = 0.02;
 const GAP_HIGH = 0.15;
 const GAP_MED = 0.10;
 const GAP_LOW = 0.05;
+const TARGET_GAP_AMBIGUOUS = 0.01;
+const AMBIGUITY_RATIO_GUARD = 1.8;
+const AMBIGUITY_GAP_GUARD = 0.10;
 
 function downgrade(level: ConfidenceLevel): ConfidenceLevel {
   if (level === "High") return "Medium";
@@ -78,7 +81,14 @@ export function computeConfidence(input: ConfidenceInput): ConfidenceResult {
     return { confidenceLevel: "Rejected", ratio, decoyGap, targetGap, notes: notes.join("; ") };
   }
 
-  if (!hasStrongDecoySupport && targetGap != null && targetGap < 0.01 && bestLabel !== secondLabel) {
+  const hasGoodDecoySeparation = (ratio != null && ratio >= AMBIGUITY_RATIO_GUARD)
+    || (decoyGap != null && decoyGap >= AMBIGUITY_GAP_GUARD);
+
+  if (!hasStrongDecoySupport
+    && !hasGoodDecoySeparation
+    && targetGap != null
+    && targetGap < TARGET_GAP_AMBIGUOUS
+    && bestLabel !== secondLabel) {
     tier = downgrade(tier);
     notes.push("Top hit close to second-best (ambiguous).");
   }
