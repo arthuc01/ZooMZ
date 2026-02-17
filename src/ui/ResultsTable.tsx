@@ -1,6 +1,6 @@
 import React from "react";
 import type { AnalysisResult } from "../engine/types";
-import { computeConfidence } from "../engine/confidence";
+// import { computeConfidence } from "../engine/confidence";
 
 type Props = {
   result: AnalysisResult | null;
@@ -20,32 +20,32 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
   }
 
   const top = result.rankedTaxa[0];
-  const second = result.rankedTaxa[1];
-  const qSample = Number.isFinite(result.fdr?.qSample ?? NaN) ? result.fdr?.qSample ?? null : null;
-  const hasFdr = (result.fdr?.nDecoys ?? 0) > 0 && qSample != null;
-  const topTaxonId = top?.taxonId ?? null;
-  const markerRows = topTaxonId ? (result.taxonMatchesTop[topTaxonId] ?? []) : [];
-  const matchedMarkers = markerRows.filter(m => m.matched && m.matchedPeakMz != null).length;
-  const confidence = computeConfidence({
-    bestScore: top?.correlation ?? null,
-    bestLabel: top?.taxonLabel ?? null,
-    secondScore: second?.correlation ?? null,
-    secondLabel: second?.taxonLabel ?? null,
-    bestDecoyScore: result.fdr?.bestDecoyScore ?? null,
-    qSample: result.fdr?.qSample ?? null,
-    matchedMarkers,
-  });
-  const confidenceLabel = confidence.confidenceLevel;
-  const confidenceClass = confidenceLabel === "High"
-    ? "badge good"
-    : (confidenceLabel === "Medium" ? "badge warn" : (confidenceLabel === "Low" ? "badge bad" : (confidenceLabel === "Rejected" ? "badge bad" : "badge")));
+  // Confidence scoring UI is temporarily hidden.
+  // const second = result.rankedTaxa[1];
+  // const qSample = Number.isFinite(result.fdr?.qSample ?? NaN) ? result.fdr?.qSample ?? null : null;
+  // const hasFdr = (result.fdr?.nDecoys ?? 0) > 0 && qSample != null;
+  // const topTaxonId = top?.taxonId ?? null;
+  // const markerRows = topTaxonId ? (result.taxonMatchesTop[topTaxonId] ?? []) : [];
+  // const matchedMarkers = markerRows.filter(m => m.matched && m.matchedPeakMz != null).length;
+  // const confidence = computeConfidence({
+  //   bestScore: top?.correlation ?? null,
+  //   bestLabel: top?.taxonLabel ?? null,
+  //   secondScore: second?.correlation ?? null,
+  //   secondLabel: second?.taxonLabel ?? null,
+  //   bestDecoyScore: result.fdr?.bestDecoyScore ?? null,
+  //   qSample: result.fdr?.qSample ?? null,
+  //   matchedMarkers,
+  // });
+  // const confidenceLabel = confidence.confidenceLevel;
+  // const confidenceClass = confidenceLabel === "High"
+  //   ? "badge good"
+  //   : (confidenceLabel === "Medium" ? "badge warn" : (confidenceLabel === "Low" ? "badge bad" : (confidenceLabel === "Rejected" ? "badge bad" : "badge")));
 
   return (
     <div className="card">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontWeight: 700 }}>Results</div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span className={confidenceClass}>{confidenceLabel}</span>
           <span className="badge warn">{top ? `Top corr: ${top.correlation.toFixed(3)}` : "-"}</span>
         </div>
       </div>
@@ -71,7 +71,6 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
               <th>Rank</th>
               <th>Taxon</th>
               <th>Correlation</th>
-              <th title="Confidence reflects separation from decoy matches and competing taxa, not just statistical significance.">Confidence</th>
             </tr>
           </thead>
           <tbody>
@@ -80,13 +79,13 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
                 <td>{i + 1}</td>
                 <td>{t.taxonLabel}</td>
                 <td>{t.correlation.toFixed(3)}</td>
-                <td><span className={confidenceClass}>{confidenceLabel}</span></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
+      {/* Confidence/FDR detail panel is temporarily hidden.
       {hasFdr && (
         <div style={{ marginTop: 10 }}>
           <div className="small" style={{ marginBottom: 6 }}>FDR details</div>
@@ -98,6 +97,7 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
           </div>
         </div>
       )}
+      */}
     </div>
   );
 }
