@@ -20,26 +20,28 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
   }
 
   const top = result.rankedTaxa[0];
-  // Confidence scoring UI is temporarily hidden.
-  // const second = result.rankedTaxa[1];
-  // const qSample = Number.isFinite(result.fdr?.qSample ?? NaN) ? result.fdr?.qSample ?? null : null;
-  // const hasFdr = (result.fdr?.nDecoys ?? 0) > 0 && qSample != null;
-  // const topTaxonId = top?.taxonId ?? null;
-  // const markerRows = topTaxonId ? (result.taxonMatchesTop[topTaxonId] ?? []) : [];
-  // const matchedMarkers = markerRows.filter(m => m.matched && m.matchedPeakMz != null).length;
-  // const confidence = computeConfidence({
-  //   bestScore: top?.correlation ?? null,
-  //   bestLabel: top?.taxonLabel ?? null,
-  //   secondScore: second?.correlation ?? null,
-  //   secondLabel: second?.taxonLabel ?? null,
-  //   bestDecoyScore: result.fdr?.bestDecoyScore ?? null,
-  //   qSample: result.fdr?.qSample ?? null,
-  //   matchedMarkers,
-  // });
-  // const confidenceLabel = confidence.confidenceLevel;
-  // const confidenceClass = confidenceLabel === "High"
-  //   ? "badge good"
-  //   : (confidenceLabel === "Medium" ? "badge warn" : (confidenceLabel === "Low" ? "badge bad" : (confidenceLabel === "Rejected" ? "badge bad" : "badge")));
+  const displayLabel = top?.taxonLabel ?? "-";
+
+  // PAMPA p-value display
+  const pampaP = result.pampaTopP;
+  const pampaPDisplay = pampaP === null
+    ? "-"
+    : pampaP < 1e-4
+      ? pampaP.toExponential(2)
+      : pampaP.toFixed(4);
+  const pampaPColor = pampaP === null
+    ? "#9ca3af"
+    : pampaP < 0.001 ? "#16a34a"
+    : pampaP < 0.05  ? "#d97706"
+    : "#ef4444";
+  const pampaStar = pampaP === null ? "" : pampaP < 0.001 ? " ***" : pampaP < 0.01 ? " **" : pampaP < 0.05 ? " *" : "";
+
+  const qSample = result.fdr.qSample;
+  const qDisplay = Number.isFinite(qSample) ? qSample.toFixed(3) : "-";
+  const qColor = Number.isFinite(qSample) && qSample < 0.05 ? "#16a34a" : "#6b7280";
+  const qcTitle = result.qc.suspect
+    ? `Suspect spectral quality: ${result.qc.notes.join("; ")}`
+    : "Spectral quality looks acceptable.";
 
   return (
     <div className="card">
@@ -47,12 +49,35 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
         <div style={{ fontWeight: 700 }}>Results</div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <span className="badge warn">{top ? `Top corr: ${top.correlation.toFixed(3)}` : "-"}</span>
+          <span className={result.qc.suspect ? "badge warn" : "badge"} title={qcTitle}>
+            {result.qc.suspect ? "QC suspect" : "QC ok"}
+          </span>
         </div>
+      </div>
+
+      <div style={{ marginTop: 8 }}>
+        <div className="small">Exact-mode label</div>
+        <div style={{ fontWeight: 700, fontStyle: "italic" }}>{displayLabel}</div>
       </div>
 
       <div className="kv" style={{ marginTop: 10 }}>
         <div className="small">Peaks used</div><div>{result.qc.peakCount}</div>
-        <div className="small">m/z range</div><div>{result.qc.mzMin.toFixed(1)}–{result.qc.mzMax.toFixed(1)}</div>
+        <div className="small">m/z range</div>
+        <div>{result.qc.mzMin.toFixed(1)} to {result.qc.mzMax.toFixed(1)}</div>
+        <div className="small">PAMPA p-value</div>
+        <div style={{ fontWeight: 600, color: pampaPColor, fontFamily: "monospace" }}>
+          {pampaPDisplay}{pampaStar}
+        </div>
+        {result.fdr.nDecoys > 0 && (
+          <>
+            <div className="small" title="Per-spectrum decoy permutation p-value. This is not a batch-level FDR estimate.">
+              Permutation p-value
+            </div>
+            <div style={{ fontFamily: "monospace", color: qColor }} title="Per-spectrum decoy permutation p-value.">
+              {qDisplay}
+            </div>
+          </>
+        )}
       </div>
 
       <div style={{ marginTop: 10 }}>
@@ -84,20 +109,6 @@ export default function ResultsTable({ result, selectedTaxonId, onSelectTaxon }:
           </tbody>
         </table>
       </div>
-
-      {/* Confidence/FDR detail panel is temporarily hidden.
-      {hasFdr && (
-        <div style={{ marginTop: 10 }}>
-          <div className="small" style={{ marginBottom: 6 }}>FDR details</div>
-          <div className="kv">
-            <div className="small">Decoys</div><div>{result.fdr.nDecoys}</div>
-            <div className="small">Best decoy score</div><div>{result.fdr.bestDecoyScore.toFixed(3)}</div>
-            <div className="small">Decoy gap</div><div>{result.fdr.decoyGap.toFixed(3)}</div>
-            <div className="small">q-sample</div><div>{qSample?.toFixed(3)}</div>
-          </div>
-        </div>
-      )}
-      */}
     </div>
   );
 }

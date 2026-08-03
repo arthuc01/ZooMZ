@@ -6,22 +6,102 @@ import MarkerMatchTable from "../ui/MarkerMatchTable";
 import BatchQueueTable from "../ui/BatchQueueTable";
 import SettingsPanel from "../ui/SettingsPanel";
 import ContaminantsTable from "../ui/ContaminantsTable";
+import TaxonomyPanel from "../ui/TaxonomyPanel";
 import * as XLSX from "xlsx";
 
 import type { AnalysisParams, AnalysisResult, Contaminant, DbManifest, RefTaxon, SpeciescanDb, Spectrum } from "../engine/types";
 import { parseSpectrumFile } from "../engine/parse";
-import { analyzeSpectrum } from "../engine/analyze";
+import { analyzeSpectrum, analyzeSpectrumGroup } from "../engine/analyze";
 import { loadContaminants, loadManifest, loadSpeciescanDb } from "../engine/speciescanDb";
 import { buildDecoyTaxa } from "../engine/decoys";
-// import { computeConfidence } from "../engine/confidence";
+import { computeConfidence } from "../engine/confidence";
+import { createSpeciescanBenchmarkParams, createStandardParams } from "../engine/presets";
 import { downloadText } from "../utils/download";
+import { median, iqr } from "../utils/numbers";
 
-const DEFAULT_PARAMS: AnalysisParams = {
+// Format a peak match as "mz (intensity)" for Excel cells.
+function formatMatch(mz: number | null | undefined, intensity: number | null | undefined): string {
+  if (mz == null || intensity == null) return "";
+  return `${mz.toFixed(3)} (${intensity.toFixed(3)})`;
+}
+
+// QC thresholds applied during Excel export.
+const QC_MIN_PEAKS = 30;
+const QC_MIN_MARKERS = 3;
+const QC_MIN_FRAC = 0.2;
+const QC_MAX_MEDIAN_PPM = 50;
+const QC_MAX_CONTAMS = 3;
+
+const DEFAULT_PARAMS: AnalysisParams = createStandardParams();
+
+// Deep-merge user settings over defaults, ensuring no missing sub-keys.
+function normalizeParams(next: Partial<AnalysisParams>): AnalysisParams {
+  return {
+    ...DEFAULT_PARAMS,
+    ...next,
+    preprocess: {
+      ...DEFAULT_PARAMS.preprocess,
+      ...(next.preprocess ?? {}),
+      smoothSG: {
+        ...DEFAULT_PARAMS.preprocess.smoothSG,
+        ...(next.preprocess?.smoothSG ?? {})
+      },
+      resampleToGrid: next.preprocess?.resampleToGrid ?? DEFAULT_PARAMS.preprocess.resampleToGrid,
+      snipDecreasing: next.preprocess?.snipDecreasing ?? DEFAULT_PARAMS.preprocess.snipDecreasing,
+      baselineSubtract: {
+        ...DEFAULT_PARAMS.preprocess.baselineSubtract,
+        ...(next.preprocess?.baselineSubtract ?? {})
+      }
+    },
+    peakPicking: {
+      ...DEFAULT_PARAMS.peakPicking,
+      ...(next.peakPicking ?? {})
+    },
+    monoisotopic: {
+      ...DEFAULT_PARAMS.monoisotopic,
+      ...(next.monoisotopic ?? {})
+    },
+    grid: {
+      ...DEFAULT_PARAMS.grid,
+      ...(next.grid ?? {})
+    },
+    folderProcessing: {
+      ...DEFAULT_PARAMS.folderProcessing,
+      ...(next.folderProcessing ?? {})
+    },
+    fdr: {
+      ...DEFAULT_PARAMS.fdr,
+      ...(next.fdr ?? {})
+    }
+  };
+}
+
+const LEGACY_DEFAULT_PARAMS = {
   mzMin: 500,
   mzMax: 3500,
-  preprocess: { enabled: true, normalizeToMax: true, baselineSubtract: { enabled: true, iterations: 50 } },
-  peakPicking: { enabled: true, minRelativeIntensity: 0.1, minPeakDistanceDa: 0.8 },
-  monoisotopic: { enabled: true, toleranceDa: 0.2, distanceDa: 1.00235, maxIsotopes: 5 },
+  preprocess: {
+    enabled: true,
+    smoothSG: { enabled: true, halfWindowSize: 2 },   // 2 pts × 0.1 Da = 0.2 Da, matching MALDIquant's 0.15 Da
+    normalizeTIC: true,
+    normalizeToMax: false,
+    baselineSubtract: { enabled: true, iterations: 15 }, // 15 pts × 0.1 Da = 1.5 Da, matching MALDIquant's 1.5 Da
+  },
+  peakPicking: {
+    enabled: true,
+    minRelativeIntensity: 0.01,   // fallback when snrThreshold === 0
+    minPeakDistanceDa: 0.8,
+    snrThreshold: 3.0,            // local SNR (MALDIquant default)
+    noiseIterations: 20,          // SNIP iterations for noise estimate
+  },
+  monoisotopic: {
+    enabled: true,
+    toleranceDa: 0.25,
+    distanceDa: 1.00235,
+    maxIsotopes: 10,
+    usePoisson: true,             // Poisson-envelope correlation (Breen 2000)
+    minCor: 0.95,                 // MALDIquant default
+    requireCluster: false,        // lenient: keep unconfirmed peaks
+  },
   grid: { startMz: 500, endMz: 3500, stepMz: 0.1 },
   contaminantsToleranceDa: 0.3,
   fdr: { enabled: true, nDecoys: 200, maxDecoys: 1000, seed: 1337, toleranceDa: 0.3 }
@@ -61,6 +141,16 @@ export default function App() {
   const selectedSpectrum = useMemo(() => spectra.find(s => s.id === selectedId) ?? null, [spectra, selectedId]);
   const selectedResult = useMemo(() => (selectedId ? results[selectedId] ?? null : null), [results, selectedId]);
   const hasResults = useMemo(() => Object.values(results).some(Boolean), [results]);
+
+  function applyAnalysisMode(mode: AnalysisParams["analysisMode"]) {
+    setParams(
+      normalizeParams(
+        mode === "speciescan_benchmark"
+          ? createSpeciescanBenchmarkParams()
+          : createStandardParams()
+      )
+    );
+  }
 
   // Load manifest and default DB on first render.
   useEffect(() => {
@@ -175,6 +265,60 @@ export default function App() {
     return parts.slice(0, -1).join("/");
   }
 
+  function fileStem(name: string): string {
+    return name.replace(/\.(mzml|mzxml)$/i, "");
+  }
+
+  function getSampleIdFromFileName(name: string, separator: string): string {
+    const stem = fileStem(name);
+    const idx = separator ? stem.indexOf(separator) : -1;
+    return idx > 0 ? stem.slice(0, idx) : stem;
+  }
+
+  function getSmartSampleIdFromFileName(name: string): string {
+    const stem = fileStem(name);
+    const match = stem.match(/^(.*?)[._-]?([1-9]|[abc])$/i);
+    if (!match) return stem;
+    const root = match[1]?.trim();
+    if (!root) return stem;
+    return root;
+  }
+
+  function buildFolderGroups(files: File[]) {
+    if (!params.folderProcessing.groupReplicates) {
+      return files.map((file) => ({
+        key: `${getRelativeFolderPath(file)}::${fileStem(file.name)}`,
+        sampleId: fileStem(file.name),
+        sourcePath: getRelativeFolderPath(file),
+        files: [file],
+        sourceMode: "folder" as const,
+      }));
+    }
+
+    const groups = new Map<string, { sampleId: string; sourcePath: string; files: File[] }>();
+    for (const file of files) {
+      const sourcePath = getRelativeFolderPath(file);
+      const sampleId = params.folderProcessing.smartGroupReplicates
+        ? getSmartSampleIdFromFileName(file.name)
+        : getSampleIdFromFileName(file.name, params.folderProcessing.sampleIdSeparator);
+      const key = `${sourcePath}::${sampleId}`;
+      const existing = groups.get(key);
+      if (existing) {
+        existing.files.push(file);
+      } else {
+        groups.set(key, { sampleId, sourcePath, files: [file] });
+      }
+    }
+
+    return Array.from(groups.entries()).map(([key, value]) => ({
+      key,
+      sampleId: value.sampleId,
+      sourcePath: value.sourcePath,
+      files: value.files,
+      sourceMode: "folder_group" as const,
+    }));
+  }
+
   async function onFolderFiles(files: File[]) {
     if (!db) {
       setError("Load a reference DB before processing a folder.");
@@ -186,20 +330,50 @@ export default function App() {
       return;
     }
 
+    const groups = buildFolderGroups(supported);
     const folderLabel = getFolderLabel(supported[0]) || "Selected folder";
-    setFolderRun({ active: true, total: supported.length, processed: 0, folderLabel });
+    setFolderRun({ active: true, total: groups.length, processed: 0, folderLabel });
     setProcessingErrors([]);
     setError(null);
     setBusy(true);
     cancelFolderRef.current = false;
 
-    for (let i = 0; i < supported.length; i++) {
+    for (let i = 0; i < groups.length; i++) {
       if (cancelFolderRef.current) break;
-      const file = supported[i];
+      const group = groups[i];
       try {
-        const parsed = await parseSpectrumFile(file);
-        const relativePath = getRelativeFolderPath(file);
-        const result = analyzeSpectrum(parsed, db, contaminants, params, decoyTaxa);
+        const parsedGroup: Spectrum[] = [];
+        for (const file of group.files) {
+          try {
+            const displayName = group.files.length > 1 ? group.sampleId : file.name;
+            const parsed = await parseSpectrumFile(file);
+            parsedGroup.push({
+              ...parsed,
+              id: parsedGroup.length === 0 ? `folder:${group.key}` : parsed.id,
+              filename: parsedGroup.length === 0 ? displayName : parsed.filename,
+              sourceMode: group.sourceMode,
+              sourcePath: group.sourcePath || folderLabel,
+              sampleId: group.sampleId,
+              replicateCount: group.files.length,
+              replicateFilenames: group.files.map(f => f.name),
+            });
+          } catch (e: any) {
+            setProcessingErrors(prev => [
+              ...prev,
+              {
+                filename: file.name,
+                error: String(e?.message ?? e),
+                sourceMode: group.sourceMode,
+                sourcePath: group.sourcePath || folderLabel,
+              }
+            ]);
+          }
+        }
+        if (!parsedGroup.length) continue;
+
+        const result = parsedGroup.length > 1
+          ? analyzeSpectrumGroup(parsedGroup, db, contaminants, params, decoyTaxa)
+          : analyzeSpectrum(parsedGroup[0], db, contaminants, params, decoyTaxa);
         const lightResult: AnalysisResult = {
           ...result,
           rawMz: new Float64Array(0),
@@ -208,24 +382,32 @@ export default function App() {
           processedIntensity: new Float64Array(0),
           peaks: [],
         };
-        setResults(prev => ({ ...prev, [parsed.id]: lightResult }));
+        const primary = parsedGroup[0];
+        setResults(prev => ({ ...prev, [primary.id]: lightResult }));
         setSpectra(prev => [
           ...prev,
           {
-            id: parsed.id,
-            filename: parsed.filename,
+            id: primary.id,
+            filename: group.files.length > 1 ? group.sampleId : group.files[0].name,
             mz: new Float64Array(0),
             intensity: new Float64Array(0),
-            centroided: parsed.centroided,
-            sourceMode: "folder",
-            sourcePath: relativePath || folderLabel
+            centroided: false,
+            sourceMode: group.sourceMode,
+            sourcePath: group.sourcePath || folderLabel,
+            sampleId: group.sampleId,
+            replicateCount: group.files.length,
+            replicateFilenames: group.files.map(f => f.name),
           }
         ]);
       } catch (e: any) {
-        const relativePath = getRelativeFolderPath(file) || folderLabel;
         setProcessingErrors(prev => [
           ...prev,
-          { filename: file.name, error: String(e?.message ?? e), sourceMode: "folder", sourcePath: relativePath }
+          {
+            filename: group.sampleId,
+            error: String(e?.message ?? e),
+            sourceMode: group.sourceMode,
+            sourcePath: group.sourcePath || folderLabel,
+          }
         ]);
       } finally {
         setFolderRun(prev => ({ ...prev, processed: prev.processed + 1 }));
@@ -275,61 +457,6 @@ export default function App() {
   // Queue analysis for all spectra in the batch.
   function runAll() {
     runAnalysis(spectra.map(s => s.id));
-  }
-
-  // Format a match as "mz (intensity)" for Excel cells.
-  function formatMatch(mz: number | null | undefined, intensity: number | null | undefined): string {
-    if (mz == null || intensity == null) return "";
-    return `${mz.toFixed(3)} (${intensity.toFixed(3)})`;
-  }
-
-  // Compute the median of a numeric array, or null when empty.
-  function median(numbers: number[]): number | null {
-    if (!numbers.length) return null;
-    const sorted = [...numbers].sort((a, b) => a - b);
-    const mid = Math.floor(sorted.length / 2);
-    if (sorted.length % 2 === 0) return (sorted[mid - 1] + sorted[mid]) / 2;
-    return sorted[mid];
-  }
-
-  // Compute the interquartile range of a numeric array, or null when empty.
-  function iqr(numbers: number[]): number | null {
-    if (numbers.length < 4) return null;
-    const sorted = [...numbers].sort((a, b) => a - b);
-    const q1Idx = Math.floor((sorted.length - 1) * 0.25);
-    const q3Idx = Math.floor((sorted.length - 1) * 0.75);
-    return sorted[q3Idx] - sorted[q1Idx];
-  }
-
-  function normalizeParams(next: Partial<AnalysisParams>): AnalysisParams {
-    return {
-      ...DEFAULT_PARAMS,
-      ...next,
-      preprocess: {
-        ...DEFAULT_PARAMS.preprocess,
-        ...(next.preprocess ?? {}),
-        baselineSubtract: {
-          ...DEFAULT_PARAMS.preprocess.baselineSubtract,
-          ...(next.preprocess?.baselineSubtract ?? {})
-        }
-      },
-      peakPicking: {
-        ...DEFAULT_PARAMS.peakPicking,
-        ...(next.peakPicking ?? {})
-      },
-      monoisotopic: {
-        ...DEFAULT_PARAMS.monoisotopic,
-        ...(next.monoisotopic ?? {})
-      },
-      grid: {
-        ...DEFAULT_PARAMS.grid,
-        ...(next.grid ?? {})
-      },
-      fdr: {
-        ...DEFAULT_PARAMS.fdr,
-        ...(next.fdr ?? {})
-      }
-    };
   }
 
   function exportSettings() {
@@ -388,16 +515,21 @@ export default function App() {
     const analysisDateLocal = now.toLocaleString();
     const methodsParagraph = [
       "ZooMZ (Zooarchaeology by mass spectrometry) analyses were performed in the ZooMZ browser app.",
+      `Analysis mode: ${params.analysisMode}.`,
       `Spectra were cropped to ${params.mzMin}-${params.mzMax} m/z.`,
       params.preprocess.enabled
-        ? `Preprocessing was enabled with normalize-to-max ${params.preprocess.normalizeToMax ? "on" : "off"} and baseline subtract ${params.preprocess.baselineSubtract.enabled ? "on" : "off"}.`
+        ? `Preprocessing was enabled with SG smoothing ${params.preprocess.smoothSG?.enabled ? `on (halfWindow=${params.preprocess.smoothSG.halfWindowSize}, polyOrder=${params.preprocess.smoothSG.polynomialOrder})` : "off"}, TIC normalisation ${params.preprocess.normalizeTIC ? "on" : "off"}, fixed-grid resampling ${params.preprocess.resampleToGrid ? "on" : "off"}, and baseline subtract ${params.preprocess.baselineSubtract.enabled ? `on (${params.preprocess.snipDecreasing ? "decreasing" : "ascending"} SNIP)` : "off"}.`
         : "Preprocessing was disabled.",
       params.peakPicking.enabled
-        ? `Peak picking used a minimum relative intensity threshold of ${params.peakPicking.minRelativeIntensity} and a minimum peak distance of ${params.peakPicking.minPeakDistanceDa} Da.`
+        ? `Peak picking used a minimum relative intensity threshold of ${params.peakPicking.minRelativeIntensity}, a minimum peak distance of ${params.peakPicking.minPeakDistanceDa} Da, and a local-max half-window of ${params.peakPicking.localMaxHalfWindowSize} points.`
         : "Peak picking was disabled.",
       params.monoisotopic.enabled
         ? `Monoisotopic filtering used tolerance ${params.monoisotopic.toleranceDa} Da, isotope spacing ${params.monoisotopic.distanceDa} Da, and max isotopes ${params.monoisotopic.maxIsotopes}.`
         : "Monoisotopic filtering was disabled.",
+      `Folder replicate grouping ${params.folderProcessing.groupReplicates ? `on (separator='${params.folderProcessing.sampleIdSeparator}')` : "off"}.`,
+      params.folderProcessing.smartGroupReplicates
+        ? "Smart replicate suffix grouping is enabled."
+        : "Smart replicate suffix grouping is disabled.",
       `Scoring grid: start ${params.grid.startMz} m/z, end ${params.grid.endMz} m/z, step ${params.grid.stepMz} m/z.`,
       `Contaminant tolerance ${params.contaminantsToleranceDa} Da.`,
       `Analysis date: ${analysisDateLocal} (${analysisDateIso}).`
@@ -409,21 +541,33 @@ export default function App() {
       ["Analysis date (ISO)", analysisDateIso],
       ["Reference DB label", db?.meta.label ?? ""],
       ["Reference DB file", db?.meta.file ?? ""],
+      ["Analysis mode", params.analysisMode],
       ["Samples analyzed", samples.length],
       ["Spectra files", samples.map(s => s.filename).join("; ")],
       ["mzMin", params.mzMin],
       ["mzMax", params.mzMax],
       ["Preprocess enabled", params.preprocess.enabled ? "Yes" : "No"],
-      ["Normalize to max", params.preprocess.normalizeToMax ? "Yes" : "No"],
+      ["SG smoothing", params.preprocess.smoothSG?.enabled ? `Yes (halfWindow=${params.preprocess.smoothSG.halfWindowSize}, polyOrder=${params.preprocess.smoothSG.polynomialOrder})` : "No"],
+      ["TIC normalisation", params.preprocess.normalizeTIC ? "Yes" : "No"],
+      ["Normalize to max (legacy)", params.preprocess.normalizeToMax ? "Yes" : "No"],
+      ["Resample to fixed grid", params.preprocess.resampleToGrid ? "Yes" : "No"],
       ["Baseline subtract enabled", params.preprocess.baselineSubtract.enabled ? "Yes" : "No"],
       ["Baseline subtract iterations", params.preprocess.baselineSubtract.iterations],
+      ["SNIP decreasing window", params.preprocess.snipDecreasing ? "Yes" : "No"],
       ["Peak picking enabled", params.peakPicking.enabled ? "Yes" : "No"],
       ["Peak min relative intensity", params.peakPicking.minRelativeIntensity],
       ["Peak min distance (Da)", params.peakPicking.minPeakDistanceDa],
+      ["Peak local-max half-window (pts)", params.peakPicking.localMaxHalfWindowSize],
       ["Monoisotopic enabled", params.monoisotopic.enabled ? "Yes" : "No"],
       ["Monoisotopic tolerance (Da)", params.monoisotopic.toleranceDa],
       ["Monoisotopic spacing (Da)", params.monoisotopic.distanceDa],
       ["Monoisotopic max isotopes", params.monoisotopic.maxIsotopes],
+      ["Require isotope cluster", params.monoisotopic.requireCluster ? "Yes" : "No"],
+      ["Folder replicate grouping", params.folderProcessing.groupReplicates ? "Yes" : "No"],
+      ["Folder smart grouping", params.folderProcessing.smartGroupReplicates ? "Yes" : "No"],
+      ["Folder sample ID separator", params.folderProcessing.sampleIdSeparator],
+      ["Folder replicate min peaks", params.folderProcessing.minReplicatePeaks],
+      ["Folder replicate max peaks", params.folderProcessing.maxReplicatePeaks],
       ["Scoring grid start (m/z)", params.grid.startMz],
       ["Scoring grid end (m/z)", params.grid.endMz],
       ["Scoring grid step (m/z)", params.grid.stepMz],
@@ -480,13 +624,14 @@ export default function App() {
     for (const s of samples) {
       const r = results[s.id];
       const top = r?.rankedTaxa?.[0];
+      const topLabel = top?.taxonLabel ?? null;
       const taxon = top ? db?.taxa.find(t => t.id === top.taxonId) ?? null : null;
       const m = markerMaps.get(s.id);
       const row: (string | number | null)[] = [s.filename];
       for (const name of markerNameOrder) {
         row.push(m?.get(name) ?? null);
       }
-      row.push(top?.taxonLabel ?? null);
+      row.push(topLabel);
       row.push(taxon?.family ?? null);
       row.push(taxon?.order ?? null);
       row.push(top?.correlation ?? null);
@@ -526,15 +671,11 @@ export default function App() {
     XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(contRows), "Contaminants");
 
     // QC Summary (one row per analyzed sample)
-    const QC_MIN_PEAKS = 30;
-    const QC_MIN_MARKERS = 3;
-    const QC_MIN_FRAC = 0.2;
-    const QC_MAX_MEDIAN_PPM = 50;
-    const QC_MAX_CONTAMS = 3;
-
     const qcHeader = [
       "spectrumId",
       "filename",
+      "sample_id",
+      "replicate_count",
       "source_mode",
       "source_path",
       "db_label",
@@ -544,7 +685,16 @@ export default function App() {
       "centroided",
       "peakCount",
       "maxIntensity",
+      "spectral_qc_suspect",
+      "spectral_qc_notes",
+      "tic",
+      "nonzeroFraction",
+      "peakDensity",
+      "dynamicRange",
       "preprocess_enabled",
+      "smoothSG_enabled",
+      "smoothSG_halfWindowSize",
+      "normalizeTIC",
       "normalizeToMax",
       "baselineSubtract_enabled",
       "baselineSubtract_iterations",
@@ -567,16 +717,15 @@ export default function App() {
       "medianMatchedIntensityTop",
       "contaminantsMatched",
       "maxContaminantIntensity",
-      // Confidence/FDR reporting columns are temporarily hidden.
-      // "confidence_level",
-      // "ratio",
-      // "decoy_gap",
-      // "target_gap",
-      // "confidence_notes",
-      // "nDecoys",
-      // "bestDecoyScore",
-      // "decoyGap",
-      // "qSample",
+      "confidence_level",
+      "ratio",
+      "decoy_gap",
+      "target_gap",
+      "confidence_notes",
+      "nDecoys",
+      "bestDecoyScore",
+      "decoyGap",
+      "qSample",
       "qcFlag",
       "qcNotes",
     ] as const;
@@ -614,22 +763,23 @@ export default function App() {
         ? Math.max(...r.contaminants.map(c => c.intensity))
         : null;
 
-      // Confidence/FDR reporting values are temporarily hidden from exports.
-      // const fdr = r?.fdr;
-      // const qSample = Number.isFinite(fdr?.qSample ?? NaN) ? fdr?.qSample ?? null : null;
-      // const confidence = computeConfidence({
-      //   bestScore: top?.correlation ?? null,
-      //   bestLabel: top?.taxonLabel ?? null,
-      //   secondScore: r?.rankedTaxa?.[1]?.correlation ?? null,
-      //   secondLabel: r?.rankedTaxa?.[1]?.taxonLabel ?? null,
-      //   bestDecoyScore: fdr?.bestDecoyScore ?? null,
-      //   qSample: fdr?.qSample ?? null,
-      //   matchedMarkers: markersMatchedTop,
-      // });
+      const fdr = r?.fdr;
+      const qSample = Number.isFinite(fdr?.qSample ?? NaN) ? (fdr?.qSample ?? null) : null;
+      const confidence = computeConfidence({
+        bestScore: top?.correlation ?? null,
+        bestLabel: top?.taxonLabel ?? null,
+        secondScore: r?.rankedTaxa?.[1]?.correlation ?? null,
+        secondLabel: r?.rankedTaxa?.[1]?.taxonLabel ?? null,
+        bestDecoyScore: fdr?.bestDecoyScore ?? null,
+        qSample,
+        matchedMarkers: markersMatchedTop,
+      });
 
       const qcNotes: string[] = [];
+      const spectralNotes: string[] = [];
       let qcFlag: "OK" | "WARN" | "FAIL" = "OK";
       const peakCount = qc?.peakCount ?? null;
+      const spectralSuspect = qc?.suspect ?? false;
 
       if (peakCount !== null && peakCount < QC_MIN_PEAKS) qcNotes.push("low peak count");
       if (markersMatchedTop < QC_MIN_MARKERS) qcNotes.push("few markers matched");
@@ -641,10 +791,16 @@ export default function App() {
         if (contaminantsMatched >= QC_MAX_CONTAMS) qcNotes.push("many contaminants");
         if (qcNotes.length) qcFlag = "WARN";
       }
+      if (spectralSuspect) {
+        spectralNotes.push(`spectral quality suspect: ${qc?.notes.join("; ") ?? ""}`.trim());
+        if (qcFlag === "OK") qcFlag = "WARN";
+      }
 
       return {
         spectrumId: s.id,
         filename: s.filename,
+        sample_id: s.sampleId ?? null,
+        replicate_count: s.replicateCount ?? 1,
         source_mode: s.sourceMode ?? null,
         source_path: s.sourcePath ?? null,
         db_label: db?.meta.label ?? null,
@@ -654,10 +810,19 @@ export default function App() {
         centroided: s.centroided ?? null,
         peakCount,
         maxIntensity: qc?.maxIntensity ?? null,
+        spectral_qc_suspect: spectralSuspect,
+        spectral_qc_notes: spectralNotes.join("; "),
+        tic: qc?.tic ?? null,
+        nonzeroFraction: qc?.nonzeroFraction ?? null,
+        peakDensity: qc?.peakDensity ?? null,
+        dynamicRange: qc?.dynamicRange ?? null,
         preprocess_enabled: params.preprocess.enabled,
-      normalizeToMax: params.preprocess.normalizeToMax,
-      baselineSubtract_enabled: params.preprocess.baselineSubtract.enabled,
-      baselineSubtract_iterations: params.preprocess.baselineSubtract.iterations,
+        smoothSG_enabled: params.preprocess.smoothSG?.enabled ?? false,
+        smoothSG_halfWindowSize: params.preprocess.smoothSG?.halfWindowSize ?? 10,
+        normalizeTIC: params.preprocess.normalizeTIC,
+        normalizeToMax: params.preprocess.normalizeToMax,
+        baselineSubtract_enabled: params.preprocess.baselineSubtract.enabled,
+        baselineSubtract_iterations: params.preprocess.baselineSubtract.iterations,
         peakpick_enabled: params.peakPicking.enabled,
         minRelativeIntensity: params.peakPicking.minRelativeIntensity,
         minPeakDistanceDa: params.peakPicking.minPeakDistanceDa,
@@ -677,16 +842,15 @@ export default function App() {
         medianMatchedIntensityTop,
         contaminantsMatched,
         maxContaminantIntensity,
-        // Confidence/FDR reporting fields are temporarily hidden.
-        // confidence_level: confidence.confidenceLevel,
-        // ratio: confidence.ratio,
-        // decoy_gap: confidence.decoyGap,
-        // target_gap: confidence.targetGap,
-        // confidence_notes: confidence.notes,
-        // nDecoys: fdr?.nDecoys ?? 0,
-        // bestDecoyScore: Number.isFinite(fdr?.bestDecoyScore ?? NaN) ? fdr?.bestDecoyScore ?? null : null,
-        // decoyGap: Number.isFinite(fdr?.decoyGap ?? NaN) ? fdr?.decoyGap ?? null : null,
-        // qSample,
+        confidence_level: confidence.confidenceLevel,
+        ratio: confidence.ratio,
+        decoy_gap: confidence.decoyGap,
+        target_gap: confidence.targetGap,
+        confidence_notes: confidence.notes,
+        nDecoys: fdr?.nDecoys ?? 0,
+        bestDecoyScore: Number.isFinite(fdr?.bestDecoyScore ?? NaN) ? (fdr?.bestDecoyScore ?? null) : null,
+        decoyGap: Number.isFinite(fdr?.decoyGap ?? NaN) ? (fdr?.decoyGap ?? null) : null,
+        qSample,
         qcFlag,
         qcNotes: qcNotes.join("; "),
       };
@@ -802,6 +966,12 @@ export default function App() {
             selectedTaxonId={inspectTaxonId}
             onSelectTaxon={(id)=>setInspectTaxonId(id)}
           />
+          <TaxonomyPanel
+            result={selectedResult}
+            db={db}
+            selectedTaxonId={inspectTaxonId}
+            onSelectTaxon={(id)=>setInspectTaxonId(id)}
+          />
         </div>
         <div className="col right">
           <SettingsPanel
@@ -810,7 +980,8 @@ export default function App() {
             onSelectDbFile={(f)=>{ setSelectedDbFile(f); reloadDb(f); }}
             db={db}
             params={params}
-            onChange={setParams}
+            onChange={(next)=>setParams(normalizeParams(next))}
+            onApplyAnalysisMode={applyAnalysisMode}
             onReloadDb={() => reloadDb(selectedDbFile)}
             onExportSettings={exportSettings}
             onImportSettings={importSettings}
@@ -825,16 +996,11 @@ export default function App() {
             selectedId={selectedId}
             onSelect={setSelectedId}
           />
-          <MarkerMatchTable result={selectedResult} taxonId={inspectTaxonId} />
+          <MarkerMatchTable
+            result={selectedResult}
+            taxonId={inspectTaxonId}
+          />
         </div>
-      </div>
-
-      <div style={{ marginTop: 12 }}>
-        <ContaminantsTable result={selectedResult} />
-      </div>
-
-      <div className="small" style={{ marginTop: 14 }}>
-        Local dev: <code>npm install</code> then <code>npm run dev</code>. Reference DBs live in <code>public/reference_dbs</code>.
       </div>
     </div>
   );

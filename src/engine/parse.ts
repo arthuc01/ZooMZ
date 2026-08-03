@@ -11,16 +11,23 @@ function base64ToBytes(b64: string): Uint8Array {
 }
 
 // Decode base64 (optionally zlib) into a Float64Array.
-function decodeBinary(b64: string, dataType: "float32" | "float64", compressed: boolean): Float64Array {
+// littleEndian defaults to true (standard for mzML); set false for big-endian mzXML.
+function decodeBinary(
+  b64: string,
+  dataType: "float32" | "float64",
+  compressed: boolean,
+  littleEndian = true
+): Float64Array {
   let bytes = base64ToBytes(b64.replace(/\s+/g, ""));
   if (compressed) bytes = pako.inflate(bytes);
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const n = dataType === "float64" ? (bytes.byteLength / 8) : (bytes.byteLength / 4);
+  const bytesPerValue = dataType === "float64" ? 8 : 4;
+  const n = bytes.byteLength / bytesPerValue;
   const out = new Float64Array(n);
-  let off = 0;
   for (let i = 0; i < n; i++) {
-    out[i] = dataType === "float64" ? dv.getFloat64(off, true) : dv.getFloat32(off, true);
-    off += dataType === "float64" ? 8 : 4;
+    out[i] = dataType === "float64"
+      ? dv.getFloat64(i * bytesPerValue, littleEndian)
+      : dv.getFloat32(i * bytesPerValue, littleEndian);
   }
   return out;
 }
@@ -36,8 +43,15 @@ function parseMzML(xmlText: string): { mz: Float64Array; intensity: Float64Array
   const parserErr = doc.querySelector("parsererror");
   if (parserErr) throw new Error("Invalid XML (mzML): parsererror");
 
-  const spectrum = doc.querySelector("spectrum");
-  if (!spectrum) throw new Error("mzML: no <spectrum> found");
+  const allSpectra = doc.querySelectorAll("spectrum");
+  if (!allSpectra.length) throw new Error("mzML: no <spectrum> found");
+  if (allSpectra.length > 1) {
+    console.warn(
+      `mzML: ${allSpectra.length} spectra found; only the first will be processed. ` +
+      "ZooMZ supports single-scan MALDI files."
+    );
+  }
+  const spectrum = allSpectra[0];
 
   const bdas = Array.from(spectrum.querySelectorAll("binaryDataArray"));
 
@@ -47,6 +61,8 @@ function parseMzML(xmlText: string): { mz: Float64Array; intensity: Float64Array
   let intType: "float32" | "float64" = "float64";
   let mzCompressed = false;
   let intCompressed = false;
+  let mzLittleEndian = true;
+  let intLittleEndian = true;
 
   for (const bda of bdas) {
     const cvParams = Array.from(bda.querySelectorAll("cvParam"));
@@ -54,9 +70,9 @@ function parseMzML(xmlText: string): { mz: Float64Array; intensity: Float64Array
     const hasInt = cvParams.some(p => p.getAttribute("name") === "intensity array");
     if (!hasMz && !hasInt) continue;
 
-    const is64 = cvParams.some(p => p.getAttribute("name") === "64-bit float");
     const is32 = cvParams.some(p => p.getAttribute("name") === "32-bit float");
     const isZlib = cvParams.some(p => p.getAttribute("name") === "zlib compression");
+    const isBigEndian = cvParams.some(p => p.getAttribute("name") === "big-endian");
 
     const binEl = bda.querySelector("binary");
     const b64 = getText(binEl);
@@ -66,18 +82,20 @@ function parseMzML(xmlText: string): { mz: Float64Array; intensity: Float64Array
       mzB64 = b64;
       mzType = is32 ? "float32" : "float64";
       mzCompressed = isZlib;
+      mzLittleEndian = !isBigEndian;
     }
     if (hasInt) {
       intB64 = b64;
       intType = is32 ? "float32" : "float64";
       intCompressed = isZlib;
+      intLittleEndian = !isBigEndian;
     }
   }
 
   if (!mzB64 || !intB64) throw new Error("mzML: could not locate both m/z and intensity arrays in first spectrum");
 
-  const mz = decodeBinary(mzB64, mzType, mzCompressed);
-  const intensity = decodeBinary(intB64, intType, intCompressed);
+  const mz = decodeBinary(mzB64, mzType, mzCompressed, mzLittleEndian);
+  const intensity = decodeBinary(intB64, intType, intCompressed, intLittleEndian);
 
   const n = Math.min(mz.length, intensity.length);
   return {
@@ -87,6 +105,7 @@ function parseMzML(xmlText: string): { mz: Float64Array; intensity: Float64Array
 }
 
 // Parse a single-scan mzXML document into m/z and intensity arrays.
+// mzXML stores peaks as big-endian (network byte order) by default; byteOrder attribute is respected.
 function parseMzXML(xmlText: string): { mz: Float64Array; intensity: Float64Array } {
   const doc = new DOMParser().parseFromString(xmlText, "application/xml");
   const parserErr = doc.querySelector("parsererror");
@@ -103,12 +122,16 @@ function parseMzXML(xmlText: string): { mz: Float64Array; intensity: Float64Arra
 
   const precisionAttr = peaksEl.getAttribute("precision");
   const precision = precisionAttr === "32" ? 32 : 64;
-
-  const compressionType = peaksEl.getAttribute("compressionType");
-  const compressed = (compressionType ?? "").toLowerCase() === "zlib";
-
   const dataType = precision === 32 ? "float32" : "float64";
-  const arr = decodeBinary(b64, dataType, compressed);
+
+  const compressionType = (peaksEl.getAttribute("compressionType") ?? "").toLowerCase();
+  const compressed = compressionType === "zlib";
+
+  // mzXML default byte order is "network" (big-endian); only "little-endian" is truly little-endian.
+  const byteOrder = (peaksEl.getAttribute("byteOrder") ?? "network").toLowerCase();
+  const littleEndian = byteOrder === "little-endian";
+
+  const arr = decodeBinary(b64, dataType, compressed, littleEndian);
 
   const nPairs = Math.floor(arr.length / 2);
   const mz = new Float64Array(nPairs);

@@ -11,7 +11,7 @@ This app supports:
 - Peak picking
 - Matching against **Speciescan-style reference DB CSVs** (one row per species/taxon; marker m/z in columns)
 - Automatic contaminant search from `public/reference_dbs/contaminants_list.csv`
-- Per-sample confidence using target-decoy FDR scoring with configurable decoy settings
+- Per-sample confidence using decoy permutation scoring with configurable decoy settings
 - Batch Excel export with QC summary, marker matches, and contaminants
 - Confidence labels (High/Medium/Low) in results tables
 - Note: expected input files are single-scan MALDI MS (multi-scan mzML is not supported)
@@ -24,12 +24,13 @@ This app supports:
 - Small batch (uploaded files)
   Multi-select uploads and run; results append as multiple rows in the output Excel.
 - Folder processing
-  Select a local folder containing many mzML/mzXML files (for example, Zenodo datasets). The app processes every spectrum found and appends one row per file to the output Excel. Errors are logged per-file and do not stop the run.
+  Select a local folder containing many mzML/mzXML files (for example, Zenodo datasets). By default the app processes every spectrum found and appends one row per file to the output Excel. In `SpecieScan benchmark mode`, folder runs can instead group technical replicates by sample ID prefix before analysis. Errors are logged per-file and do not stop the run.
 
 Folder processing is intended for high-throughput validation runs (hundreds/thousands of spectra).
 
-FDR confidence thresholds used in the app:
-- FDR gate: qSample > 0.05 => Rejected (not acceptable)
+Decoy confidence thresholds used in the app:
+- Permutation gate: qSample > 0.05 => Rejected (not acceptable)
+- `qSample` is a per-spectrum decoy permutation p-value, not a batch-level FDR.
 - Decoy gap is the difference between the top real score and the best decoy score; larger gaps indicate stronger separation, while zero/negative gaps suggest weak confidence.
 
 ## Confidence estimation
@@ -37,7 +38,7 @@ FDR confidence thresholds used in the app:
 Confidence levels reflect separation from random matches and from competing taxa, not a single statistical probability.
 
 Procedure summary:
-- FDR control (q-value): reject if qSample > 0.05
+- Permutation control: reject if qSample > 0.05
 - Separation from decoys: use best_score / best_decoy_score (or best_score - best_decoy_score when decoy scores are very small)
 - Taxonomic discrimination: down-weight when top and second-best taxa are very close
 - Evidence sufficiency (optional): down-weight if very few markers support the call
@@ -64,7 +65,7 @@ Medium	Above decoys but limited separation or moderate ambiguity
 Low	Statistically admissible but weak separation or sparse evidence
 Rejected	Not convincingly above random matches
 
-Confidence labels are intended as interpretive guidance, not exact probabilities.
+Confidence labels are intended as interpretive guidance, not exact probabilities. The decoy `qSample` value is a per-spectrum permutation p-value, not a dataset-wide FDR estimate.
 
 
 ## Run
@@ -75,6 +76,31 @@ This app is hosted on Github Pages [https://arthuc01.github.io/ZooMZ/](https://a
 npm install
 npm run dev
 ```
+
+## Node validation
+
+The browser engine can now be validated directly under Node without going through the older Python proxy scripts.
+
+```bash
+npm run validate:node -- --run A
+```
+
+Useful variants:
+
+- `npm run validate:node -- --run A --limit 20`
+- `npm run validate:node -- --run A --sample DC12745`
+
+This command compiles the shared engine to `validation/.node-build/` and runs `validation/scripts/validate_ts_engine.mjs`, writing results to `validation/outputs/real_spectra/trackB_ts_runA_results.csv`.
+
+To run the Track B comparator with the TypeScript SpeciesCan-style preprocessing path and exact SpecieScan asymmetric scoring windows, pass `--mode exact`. That now uses the dedicated `speciescan_exact` replicate workflow in the shared engine, then writes `validation/outputs/real_spectra/trackB_ts_exact_runA_results.csv`.
+
+For the SpecieScan-aligned scoring-only path on the exported R peaks, run `npm run validate:rpeaks:ts`. That scores the R-preprocessed peak CSVs from `validation/outputs/r_preprocessed_peaks/` with the exact SpecieScan windowing rules and writes `validation/outputs/real_spectra/trackR_ts_speciescan_results.csv`.
+
+To compare the TypeScript SpeciesCan-style preprocessing directly against those exported R peak CSVs, run `npm run validate:preprocess:ts`. That writes `validation/outputs/real_spectra/trackR_ts_preprocessing_parity.csv` with per-sample peak-list precision/recall/F1 against the R reference peaks.
+
+For a diagnostic comparison that uses the validated R-preprocessed comparator whenever it is available, and falls back to the raw exact comparator only for samples missing an R result, run `npm run validate:exact:consensus`. It writes `validation/outputs/real_spectra/trackB_ts_exact_consensus_results.csv`.
+
+SpeciesScan validation notes and the score comparison plot are documented in [validation/README.md](validation/README.md).
 
 ## Deploy (GitHub Pages)
 

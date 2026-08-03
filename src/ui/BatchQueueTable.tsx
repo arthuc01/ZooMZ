@@ -62,24 +62,33 @@ function BatchQueueTable({ spectra, results, selectedId, onSelect }: Props) {
             <th>File</th>
             <th>Top taxon</th>
             <th>Corr</th>
+            <th>QC</th>
           </tr>
         </thead>
         <tbody>
           {visible.map((s) => {
             const r = results[s.id];
             const top = r?.rankedTaxa?.[0];
+            const label = top?.taxonLabel ?? "-";
             const corrText = top ? top.correlation.toFixed(3) : "-";
             const active = selectedId === s.id;
+            const qcLabel = r?.qc.suspect ? "Suspect" : "OK";
+            const qcTitle = r?.qc.suspect
+              ? r.qc.notes.join("; ")
+              : "Spectral quality looks acceptable.";
             return (
               <tr key={s.id} onClick={() => onSelect(s.id)} style={{ cursor: "pointer", background: active ? "#f3f4f6" : undefined }}>
                 <td>{s.filename}</td>
-                <td>{top ? top.taxonLabel : "-"}</td>
+                <td>{label}</td>
                 <td>{corrText}</td>
+                <td title={qcTitle} style={{ color: r?.qc.suspect ? "#b45309" : "#15803d", fontWeight: 600 }}>
+                  {qcLabel}
+                </td>
               </tr>
             );
           })}
           {!spectra.length && (
-            <tr><td colSpan={3} className="small">Drop spectra above to build a batch queue.</td></tr>
+            <tr><td colSpan={4} className="small">Drop spectra above to build a batch queue.</td></tr>
           )}
         </tbody>
       </table>

@@ -1,4 +1,5 @@
 // Trigger a browser download for a text payload.
+// URL is revoked after a short delay to ensure the download has started.
 export function downloadText(filename: string, content: string, mime = "text/plain") {
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
@@ -6,5 +7,5 @@ export function downloadText(filename: string, content: string, mime = "text/pla
   a.href = url;
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

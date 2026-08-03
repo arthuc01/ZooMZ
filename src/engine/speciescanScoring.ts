@@ -8,6 +8,42 @@ export const DEFAULT_DEAMID_MARKERS = new Set<string>([
   "COL1a2_793___816",
 ]);
 
+const EXACT_GRID_START_MZ = 500;
+const EXACT_GRID_END_MZ = 3500;
+const EXACT_GRID_STEP_MZ = 0.1;
+const EXACT_GRID = Array.from(
+  { length: Math.round((EXACT_GRID_END_MZ - EXACT_GRID_START_MZ) / EXACT_GRID_STEP_MZ) },
+  (_, i) => EXACT_GRID_START_MZ + i * EXACT_GRID_STEP_MZ
+);
+
+function markerWindowForMode(markerName: string, params: AnalysisParams): { leftDa: number; rightDa: number } {
+  if (params.analysisMode === "speciescan_benchmark") {
+    return { leftDa: -0.4, rightDa: +0.4 };
+  }
+  if (params.analysisMode === "speciescan_exact") {
+    return { leftDa: -1.3, rightDa: +0.3 };
+  }
+  const isDeamid = DEFAULT_DEAMID_MARKERS.has(markerName);
+  return isDeamid
+    ? { leftDa: -1.3, rightDa: +0.3 }
+    : { leftDa: -0.3, rightDa: +0.3 };
+}
+
+function sampleWindowForMode(params: AnalysisParams): { leftDa: number; rightDa: number } {
+  if (params.analysisMode === "speciescan_benchmark") {
+    return { leftDa: -0.4, rightDa: +0.4 };
+  }
+  if (params.analysisMode === "speciescan_exact") {
+    return { leftDa: -1.3, rightDa: +0.3 };
+  }
+  return { leftDa: -1.3, rightDa: +0.3 };
+}
+
+function vectorLength(params: AnalysisParams): number {
+  const span = (params.grid.endMz - params.grid.startMz) / params.grid.stepMz;
+  return params.analysisMode === "speciescan_exact" ? Math.round(span) : Math.round(span) + 1;
+}
+
 // Clamp an integer to an inclusive range.
 function clampInt(v: number, lo: number, hi: number): number {
   if (v < lo) return lo;
@@ -15,42 +51,84 @@ function clampInt(v: number, lo: number, hi: number): number {
   return v;
 }
 
+function lowerBound(arr: number[], value: number): number {
+  let lo = 0;
+  let hi = arr.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (arr[mid] < value) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
+function upperBound(arr: number[], value: number): number {
+  let lo = 0;
+  let hi = arr.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (arr[mid] <= value) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
 // Mark a window around an m/z in a binned binary vector.
-function setWindowBinary(arr: Uint8Array, startMz: number, stepMz: number, mz: number, leftDa: number, rightDa: number) {
+function setWindowBinary(
+  arr: Uint8Array,
+  startMz: number,
+  stepMz: number,
+  mz: number,
+  leftDa: number,
+  rightDa: number,
+  exactMode: boolean
+) {
   const n = arr.length;
   const leftMz = mz + leftDa;
   const rightMz = mz + rightDa;
 
-  let i0 = Math.ceil((leftMz - startMz) / stepMz);
-  let i1 = Math.floor((rightMz - startMz) / stepMz);
+  if (exactMode && startMz === EXACT_GRID_START_MZ && stepMz === EXACT_GRID_STEP_MZ) {
+    const i0 = clampInt(upperBound(EXACT_GRID, leftMz), 0, n);
+    const i1 = clampInt(lowerBound(EXACT_GRID, rightMz), 0, n);
+    for (let i = i0; i < i1; i++) arr[i] = 1;
+    return;
+  }
 
-  i0 = clampInt(i0, 0, n - 1);
-  i1 = clampInt(i1, 0, n - 1);
+  let i0 = exactMode
+    ? Math.floor((leftMz - startMz) / stepMz) + 1
+    : Math.round((leftMz - startMz) / stepMz);
+  let i1 = exactMode
+    ? Math.ceil((rightMz - startMz) / stepMz)
+    : Math.round((rightMz - startMz) / stepMz) + 1;
 
-  for (let i = i0; i <= i1; i++) arr[i] = 1;
+  i0 = clampInt(i0, 0, n);
+  i1 = clampInt(i1, 0, n);
+
+  for (let i = i0; i < i1; i++) arr[i] = 1;
 }
 
 // Build a binary presence vector for sample peaks on the scoring grid.
 export function buildSampleVector(peaks: Peak[], params: AnalysisParams): Uint8Array {
-  const { startMz, endMz, stepMz } = params.grid;
-  const n = Math.floor((endMz - startMz) / stepMz);
+  const { startMz, stepMz } = params.grid;
+  const n = vectorLength(params);
   const x = new Uint8Array(n);
+  const exactMode = params.analysisMode === "speciescan_exact";
 
-  // SpecieScan: for each peak p, set 1 where (p-x) in (-0.3, +1.3) => x in (p-1.3, p+0.3)
-  for (const p of peaks) setWindowBinary(x, startMz, stepMz, p.mz, -1.3, +0.3);
+  const window = sampleWindowForMode(params);
+  for (const p of peaks) setWindowBinary(x, startMz, stepMz, p.mz, window.leftDa, window.rightDa, exactMode);
   return x;
 }
 
 // Build a binary presence vector for a taxon's reference markers.
 export function buildTaxonVector(taxon: RefTaxon, params: AnalysisParams): Uint8Array {
-  const { startMz, endMz, stepMz } = params.grid;
-  const n = Math.floor((endMz - startMz) / stepMz);
+  const { startMz, stepMz } = params.grid;
+  const n = vectorLength(params);
   const y = new Uint8Array(n);
+  const exactMode = params.analysisMode === "speciescan_exact";
 
   for (const m of taxon.markers) {
-    const isDeamid = DEFAULT_DEAMID_MARKERS.has(m.name);
-    if (isDeamid) setWindowBinary(y, startMz, stepMz, m.mz, -1.3, +0.3);
-    else setWindowBinary(y, startMz, stepMz, m.mz, -0.3, +0.3);
+    const window = markerWindowForMode(m.name, params);
+    setWindowBinary(y, startMz, stepMz, m.mz, window.leftDa, window.rightDa, exactMode);
   }
   return y;
 }
@@ -105,13 +183,11 @@ function nearestPeakWithin(peaksSorted: Peak[], targetMz: number, leftDa: number
 }
 
 // Match picked peaks to a taxon's markers with SpecieScan tolerances.
-export function markerMatchesForTaxon(peaks: Peak[], taxon: RefTaxon): MarkerMatchRow[] {
+export function markerMatchesForTaxon(peaks: Peak[], taxon: RefTaxon, params: AnalysisParams): MarkerMatchRow[] {
   const sorted = [...peaks].sort((a,b)=>a.mz-b.mz);
   return taxon.markers.map(m => {
-    const isDeamid = DEFAULT_DEAMID_MARKERS.has(m.name);
-    const left = isDeamid ? -1.3 : -0.3;
-    const right = +0.3;
-    const best = nearestPeakWithin(sorted, m.mz, left, right);
+    const window = markerWindowForMode(m.name, params);
+    const best = nearestPeakWithin(sorted, m.mz, window.leftDa, window.rightDa);
     return {
       markerName: m.name,
       expectedMz: m.mz,
@@ -133,7 +209,11 @@ export function scoreTaxa(peaks: Peak[], taxa: RefTaxon[], params: AnalysisParam
     scores.push({ taxonId: t.id, taxonLabel: t.label, correlation: corr });
   }
 
-  scores.sort((a,b)=>b.correlation - a.correlation);
+  scores.sort((a, b) => {
+    const delta = b.correlation - a.correlation;
+    if (Math.abs(delta) > 1e-12) return delta;
+    return b.taxonLabel.localeCompare(a.taxonLabel);
+  });
   return scores;
 }
 

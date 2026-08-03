@@ -1,11 +1,15 @@
+import type { TaxonomyAssignment } from "./taxonomy";
 export type Spectrum = {
   id: string;
   filename: string;
   mz: Float64Array;
   intensity: Float64Array;
   centroided?: boolean;
-  sourceMode?: "single" | "batch_upload" | "folder";
+  sourceMode?: "single" | "batch_upload" | "folder" | "folder_group";
   sourcePath?: string;
+  sampleId?: string;
+  replicateCount?: number;
+  replicateFilenames?: string[];
 };
 
 export type Peak = { mz: number; intensity: number };
@@ -51,21 +55,65 @@ export type ContaminantHit = {
 };
 
 export type AnalysisParams = {
+  analysisMode: "standard" | "speciescan_benchmark" | "speciescan_exact";
   mzMin: number;
   mzMax: number;
 
   preprocess: {
     enabled: boolean;
+    /** Savitzky-Golay smoothing applied before baseline subtraction. */
+    smoothSG: { enabled: boolean; halfWindowSize: number; polynomialOrder: number };
+    /** TIC normalisation (divide by sum) - matches SpecieScan / MALDIquant. Preferred over normalizeToMax. */
+    normalizeTIC: boolean;
+    /** Legacy max-normalisation. Ignored when normalizeTIC is true. */
     normalizeToMax: boolean;
+    /** Resample to a fixed regular grid before preprocessing. */
+    resampleToGrid: boolean;
+    /** Use the Morhac-style decreasing SNIP clipping window. */
+    snipDecreasing: boolean;
     baselineSubtract: { enabled: boolean; iterations: number };
   };
-  peakPicking: { enabled: boolean; minRelativeIntensity: number; minPeakDistanceDa: number };
+  peakPicking: {
+    enabled: boolean;
+    /** Global relative-intensity threshold (fraction of max). Used when snrThreshold === 0. */
+    minRelativeIntensity: number;
+    minPeakDistanceDa: number;
+    /** Local-SNR threshold -- matches MALDIquant SNR=3. Set to 0 to use minRelativeIntensity. */
+    snrThreshold: number;
+    /** Local-max half-window in points for MALDIquant-style peak calling. */
+    localMaxHalfWindowSize: number;
+    /** SNIP iterations for the local noise estimate (second pass, default 20). */
+    noiseIterations: number;
+  };
 
-  // simple monoisotopic filtering (deisotoping)
-  monoisotopic: { enabled: boolean; toleranceDa: number; distanceDa: number; maxIsotopes: number };
+  monoisotopic: {
+    enabled: boolean;
+    toleranceDa: number;
+    distanceDa: number;
+    maxIsotopes: number;
+    /** Use Poisson-envelope correlation (Breen 2000) -- matches MALDIquant monoisotopicPeaks. */
+    usePoisson: boolean;
+    /** Minimum Pearson r to accept an isotope cluster. MALDIquant default: 0.95. */
+    minCor: number;
+    /** Drop peaks with no confirmed isotope cluster (strict MALDIquant mode). Default false. */
+    requireCluster: boolean;
+  };
 
   // Speciescan scoring grid
   grid: { startMz: number; endMz: number; stepMz: number };
+
+  folderProcessing: {
+    /** Group technical replicates by sample ID prefix during folder runs. */
+    groupReplicates: boolean;
+    /** Auto-detect replicate suffixes like _1/_2/_3 or _a/_b/_c when grouping folder files. */
+    smartGroupReplicates: boolean;
+    /** Sample ID separator used to extract the group key from filenames. */
+    sampleIdSeparator: string;
+    /** Keep only replicates with at least this many peaks before averaging in benchmark mode. */
+    minReplicatePeaks: number;
+    /** Keep only replicates with at most this many peaks before averaging in benchmark mode. */
+    maxReplicatePeaks: number;
+  };
 
   contaminantsToleranceDa: number; // typically 0.3
 
@@ -82,6 +130,7 @@ export type AnalysisResult = {
   spectrumId: string;
   filename: string;
   params: AnalysisParams;
+  consensusLabel?: string | null;
 
   // For plotting (cropped to mzMin..mzMax)
   rawMz: Float64Array;
@@ -102,7 +151,24 @@ export type AnalysisResult = {
     qSample: number;
   };
 
-  qc: { mzMin: number; mzMax: number; maxIntensity: number; peakCount: number };
+  qc: {
+    mzMin: number;
+    mzMax: number;
+    maxIntensity: number;
+    peakCount: number;
+    tic: number;
+    nonzeroFraction: number;
+    peakDensity: number;
+    dynamicRange: number;
+    suspect: boolean;
+    notes: string[];
+  };
+
+  /** PAMPA-style taxonomy assignment computed from ranked taxa. */
+  assignment: TaxonomyAssignment | null;
+
+  /** PAMPA analytical p-value for top-ranked taxon. Binomial: P(Binom(n,p) >= k_matched). Null when insufficient data. */
+  pampaTopP: number | null;
 };
 
 export type DbManifest = {

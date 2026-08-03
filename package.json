@@ -6,7 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "validate:node:build": "node validation/scripts/build_validate_ts_engine.mjs",
+    "validate:node": "npm run validate:node:build && node validation/scripts/validate_ts_engine.mjs",
+    "validate:rpeaks:ts": "npm run validate:node:build && node validation/scripts/validate_r_peaks_ts.mjs",
+    "validate:preprocess:ts": "npm run validate:node:build && node validation/scripts/validate_speciescan_preprocessing_ts.mjs",
+    "validate:exact:consensus": "npm run validate:node:build && node validation/scripts/validate_exact_consensus.mjs",
+    "compare:exact:ss": "node validation/scripts/compare_exact_vs_speciescan.mjs"
   },
   "dependencies": {
     "pako": "^2.1.0",
@@ -20,7 +26,7 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
-    "typescript": "^5.5.4",
+    "typescript": "^5.9.3",
     "vite": "^5.4.2"
   }
 }

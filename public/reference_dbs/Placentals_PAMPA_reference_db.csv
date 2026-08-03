@@ -1,0 +1,189 @@
+Order,Family,Species,ZooMS_taxon,COL1a1_508_520,COLa1_2_978_990,COLa1_2_978_990_16,COL1a2_484___499,COL1a2_502___519,COL1a2_292___309,COL1a2_793___816,COL1a2_454___483,COL1a1_586___618,COL1a1_586___618_16,COL1a2_757___789,COL1a2_757___789_16
+Carnivora,Felidae,Acinonyx jubatus,Cheetah,1105.6,1207.6,1223.6,1453.7,1566.8,1593.8,2163.1,,2853.4,2869.4,2983.5,2999.5
+Rodentia,Muridae,Acomys russatus,Golden spiny mouse,1105.6,1187.6,1203.6,1477.8,1554.8,1592.8,2147.1,,2911.4,2927.4,2973.5,2989.5
+Carnivora,Ursidae,Ailuropoda melanoleuca,Giant panda,1105.6,1205.6,1221.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2957.5,2973.5
+Primates,Aotidae,Aotus nancymaae,Ma's night monkey,1105.6,1219.7,1235.6,1453.7,1580.8,1619.8,2115.1,,2883.4,2899.4,2957.5,2973.5
+Rodentia,Muridae,Apodemus sylvaticus,European woodmouse,1105.6,1187.6,1203.6,1453.7,1566.8,1592.8,2143.2,,2925.4,2941.4,2943.5,2959.5
+Chiroptera,Phyllostomidae,Artibeus jamaicensis,Jamaican fruit-eating bat,1105.6,1205.6,1221.6,1453.7,1608.8,1578.8,2119.1,,2883.4,2899.4,2957.5,2973.5
+Rodentia,Muridae,Arvicanthis niloticus,African grass rat,1105.6,1187.6,1203.6,1453.7,1566.8,1592.8,2143.2,,2925.4,2941.4,2957.5,2973.5
+Rodentia,Cricetidae,Arvicola amphibius,Eurasian water mole,1105.6,1187.6,1203.6,1453.7,1552.7,1592.8,2129.1,,2883.4,2899.4,3043.5,3059.5
+Artiodactyla,Balaenopteridae,Balaenoptera acutorostrata,Common minke whale,1079.6,1189.6,1205.6,1441.7,1577.8,1652.8,2135.1,,2883.4,2899.4,3007.5,3023.5
+Artiodactyla,Balaenopteridae,Balaenoptera musculus,Blue whale,1079.6,1189.6,1205.6,1453.7,1577.8,1652.8,2105.1,,2883.4,2899.4,3007.5,3023.5
+Artiodactyla,Balaenopteridae,Balaenoptera ricei,Rice's whale,1079.6,1189.6,1205.6,1441.7,1577.8,1652.8,2135.1,,2883.4,2899.4,3007.5,3023.5
+Artiodactyla,Bovidae,Bison bison bison,Bison bison bison,1105.6,1192.7,1208.7,1427.7,1580.8,1648.8,2131.1,,2853.4,2869.4,3017.5,3033.5
+Artiodactyla,Bovidae,Bos indicus,Zebu,1105.6,1192.7,1208.7,1427.7,1580.8,1648.8,2131.1,,2853.4,2869.4,3017.5,3033.5
+Artiodactyla,Bovidae,Bos indicus x Bos taurus,Hybrid cattle,1105.6,1192.7,1208.7,1427.7,1580.8,1648.8,2131.1,,2853.4,2869.4,3017.5,3033.5
+Artiodactyla,Bovidae,Bos javanicus,Wild banteng,1105.6,1192.7,1208.7,1427.7,1580.8,1648.8,2131.1,,2853.4,2869.4,3017.5,3033.5
+Artiodactyla,Bovidae,Bos mutus,wild yak,1105.6,1192.7,1208.7,1427.7,1580.8,1648.8,2131.1,,2853.4,2869.4,3017.5,3033.5
+Artiodactyla,Bovidae,Bos taurus,Bovine,1105.6,1192.7,1208.7,1427.7,1580.8,1648.8,2131.1,,2853.4,2869.4,3017.5,3033.5
+Artiodactyla,Bovidae,Bubalus bubalis,Domestic water buffalo,1105.6,1192.7,1208.7,1455.8,1580.8,1648.8,2131.1,,2853.4,2869.4,3059.5,3075.5
+Artiodactyla,Bovidae,Bubalus carabanensis,Swamp type water buffalo,1105.6,1192.7,1208.7,1455.8,1580.8,1648.8,2131.1,,2853.4,2869.4,3059.5,3075.5
+Artiodactyla,Bovidae,Budorcas taxicolor,Golden takin,1105.6,1180.6,1196.6,1427.7,1580.8,1648.8,2131.1,,2883.4,2899.4,3017.5,3033.5
+Primates,Cebidae,Callithrix jacchus,White-tufted-ear marmoset,1105.6,1219.7,1235.6,1453.7,1580.8,1619.8,2115.1,,2883.4,2899.4,2957.5,2973.5
+Carnivora,Otariidae,Callorhinus ursinus,Northern fur seal,1105.6,1205.6,1221.6,1453.7,1566.8,1639.8,2121.1,,2853.4,2869.4,2957.5,2973.5
+Artiodactyla,Camelidae,Camelus bactrianus,Bactrian camel,1105.6,1221.6,,1443.7,1550.8,1634.8,2131.1,,2883.4,2899.4,2975.5,2991.5
+Artiodactyla,Camelidae,Camelus dromedarius,Dromedary,1105.6,1221.6,,1453.7,1550.8,1634.8,2131.1,,2883.4,2899.4,2975.5,2991.5
+Artiodactyla,Camelidae,Camelus ferus,Wild bactrian camel,1105.6,1205.6,1221.6,1443.7,1550.8,1634.8,2131.1,,2883.4,2899.4,2975.5,2991.5
+Carnivora,Canidae,Canis lupus dingo,dingo,1105.6,1210.7,1226.6,1453.7,1566.8,1593.8,2131.1,,2853.4,2869.4,2983.5,2999.5
+Carnivora,Canidae,Canis lupus familiaris,Dog,1105.6,1210.7,1226.6,1453.7,1566.8,1593.8,2131.1,,2853.4,2869.4,2983.5,2999.5
+Artiodactyla,Bovidae,Capra hircus,Goat,1105.6,1180.6,1196.6,1427.7,1580.8,1648.8,2131.1,,2883.4,2899.4,3077.5,3093.5
+Primates,Tarsiidae,Carlito syrichta,Philippine tarsier,1105.6,1205.6,1221.6,1453.7,1552.7,1623.8,2145.1,,2843.4,2859.4,2957.5,2973.5
+Rodentia,Castoridae,Castor canadensis,American beaver,1105.6,1177.6,1193.6,1427.7,1593.8,1596.8,2129.1,,2883.4,2899.4,2983.5,2999.5
+Rodentia,Caviidae,Cavia porcellus,Guinea pig,1105.6,1162.6,1178.6,1427.7,1605.8,1647.8,2117.1,,2915.4,2931.4,2983.5,2999.5
+Primates,Cebidae,Cebus imitator,Panamanian white-faced capuchin,1105.6,1219.7,1235.6,1453.7,1580.8,1619.8,2129.1,,2869.4,2885.4,2957.5,2973.5
+Primates,Cercopithecidae,Cercocebus atys,Sooty mangabey,1105.6,1219.7,1235.6,1413.7,1580.8,1619.8,2129.1,,2883.4,2899.4,2957.5,2973.5
+Artiodactyla,Cervidae,Cervus elaphus,Red deer,1105.6,1180.6,1196.6,1427.7,1550.8,1648.8,2131.1,,2883.4,2899.4,3017.5,3033.5
+Rodentia,Chinchillidae,Chinchilla lanigera,Long-tailed chinchilla,1105.6,1161.6,1177.6,1427.7,1594.8,1609.8,2133.1,,2869.4,2885.4,2957.5,2973.5
+Rodentia,Cricetidae,Chionomys nivalis,European snow vole,1105.6,1187.6,1203.6,1453.7,1552.7,1592.8,2129.1,,2883.4,2899.4,3043.5,3059.5
+Primates,Cercopithecidae,Chlorocebus sabaeus,Green monkey,1105.6,1219.7,1235.6,1427.7,1580.8,1619.8,2115.1,,2883.4,2899.4,2957.5,2973.5
+Pilosa,Megalonychidae,Choloepus didactylus,Southern two-toed sloth,1105.6,1189.6,1205.6,1453.7,1568.8,1626.8,2172.1,,2869.4,2885.4,2957.5,2973.5
+Primates,Cercopithecidae,Colobus angolensis palliatus,Peters' Angolan colobus,1105.6,1219.7,1235.6,1451.7,1580.8,1619.8,2115.1,,2883.4,2899.4,2957.5,2973.5
+Eulipotyphla,Talpidae,Condylura cristata,Star-nosed mole,1105.6,1205.6,1221.6,1453.7,1566.8,1684.8,2209.1,,2869.4,2885.4,3013.5,3029.5
+Rodentia,Cricetidae,Cricetulus griseus,Chinese hamster,1105.6,1187.6,1203.6,1453.7,1566.8,1578.8,2129.1,,2883.4,2899.4,3015.5,3031.5
+Artiodactyla,Cervidae,Dama dama,Fallow deer,1105.6,1180.6,1196.6,1427.7,1550.8,1648.8,2131.1,,2883.4,2899.4,3017.5,3033.5
+Cingulata,Dasypodidae,Dasypus novemcinctus,Nine-banded armadillo,1105.6,1189.6,1205.6,1477.8,1568.8,1613.8,2131.1,,2883.4,2899.4,2957.5,2973.5
+Artiodactyla,Monodontidae,Delphinapterus leucas,Beluga whale,1079.6,1189.6,1205.6,1443.7,1550.8,1652.8,2121.1,,2883.4,2899.4,3051.5,3067.5
+Artiodactyla,Delphinidae,Delphinus delphis,Short-beaked common dolphin,1079.6,1189.6,1205.6,1453.7,1566.8,1638.8,2119.1,,2883.4,2899.4,3007.5,3023.5
+Perissodactyla,Rhinocerotidae,Diceros bicornis,South-central black rhinoceros,1105.6,1182.6,1198.6,1453.7,1550.8,1623.8,2145.1,,2869.4,2885.4,2983.5,2999.5
+Rodentia,Heteromyidae,Dipodomys ordii,Ord's kangaroo rat,1105.6,1152.6,1168.6,1453.7,1566.8,1609.8,2159.1,,2869.4,2885.4,2983.5,2999.5
+Rodentia,Heteromyidae,Dipodomys spectabilis,Banner-tailed kangaroo rat,1105.6,1152.6,1168.6,1453.7,1566.8,1609.8,2159.1,,2869.4,2885.4,2983.5,2999.5
+,Tenrecidae,Echinops telfairi,Lesser hedgehog tenrec,1105.6,1161.6,1177.6,1477.8,1569.8,1619.8,2145.1,,2885.4,2901.4,3009.5,3025.5
+Proboscidea,Elephantidae,Elephas maximus indicus,Elephas maximus indicus,1105.6,1145.6,1161.6,1453.7,1579.8,1567.7,2115.1,,2853.4,2869.4,2999.5,3015.5
+Perissodactyla,Equidae,Equus asinus,Donkey,1105.6,1182.6,1198.6,1427.7,1550.8,1649.8,2145.1,,2883.4,2899.4,2983.5,2999.5
+Perissodactyla,Equidae,Equus caballus,Horse,1105.6,1182.6,1198.6,1427.7,1550.8,1649.8,2145.1,,2883.4,2899.4,2983.5,2999.5
+Perissodactyla,Equidae,Equus quagga,Equus quagga,1105.6,1182.6,1198.6,1427.7,1550.8,1649.8,2145.1,,2883.4,2899.4,2983.5,2999.5
+Eulipotyphla,Erinaceidae,Erinaceus europaeus,Western European hedgehog,1105.6,1223.6,1239.6,1453.7,1565.8,1608.8,2207.1,,2869.4,2885.4,2941.5,2957.5
+Artiodactyla,Balaenidae,Eubalaena glacialis,North Atlantic right whale,1079.6,1189.6,1205.6,1453.7,1577.8,1682.8,2135.1,,2883.4,2899.4,3007.5,3023.5
+Carnivora,Otariidae,Eumetopias jubatus,Steller sea lion,1105.6,1205.6,1221.6,1453.7,1566.8,1639.8,2121.1,,2853.4,2869.4,2957.5,2973.5
+Carnivora,Felidae,Felis catus,Cat,1105.6,1207.6,1223.6,1453.7,1566.8,1593.8,2163.1,,2853.4,2869.4,2983.5,2999.5
+Rodentia,Bathyergidae,Fukomys damarensis,Damaraland mole rat,1105.6,1152.6,1168.6,1437.7,1594.8,1614.8,2133.1,,2869.4,2885.4,2980.5,2996.5
+Dermoptera,Cynocephalidae,Galeopterus variegatus,Malayan flying lemur,1105.6,1189.6,1205.6,1477.8,1575.8,1623.8,2131.1,,2885.4,2901.4,3028.5,3044.5
+Artiodactyla,Delphinidae,Globicephala melas,Long-finned pilot whale,1063.6,1205.6,,1453.7,1566.8,1638.8,2119.1,,2883.4,2899.4,3007.5,3023.5
+Primates,Hominidae,Gorilla gorilla gorilla,Western lowland gorilla,1105.6,1219.7,1235.6,1477.8,1580.8,1619.8,2105.1,,2869.4,2885.4,2957.5,2973.5
+Rodentia,Muridae,Grammomys surdaster,African woodland thicket rat,1105.6,1187.6,1203.6,1453.7,1566.8,1592.8,2143.2,,2941.4,2957.4,2957.5,2973.5
+Carnivora,Phocidae,Halichoerus grypus,Gray seal,1105.6,1205.6,1221.6,1453.7,,1639.8,2171.1,,2869.4,2885.4,2957.5,2973.5
+Rodentia,Bathyergidae,Heterocephalus glaber,Naked mole rat,1105.6,1152.6,1168.6,1453.7,1594.8,1599.7,2173.2,,2859.4,2875.4,2983.5,2999.5
+Artiodactyla,Hippopotamidae,Hippopotamus amphibius kiboko,Hippopotamus amphibius kiboko,1105.6,1189.6,1205.6,1453.7,1581.8,1648.8,2147.1,,2869.4,2885.4,3017.5,3033.5
+Chiroptera,Hipposideridae,Hipposideros armiger,Great Himalayan leaf-nosed bat,1105.6,1219.7,1235.6,1453.7,1594.8,1568.8,2163.1,,2899.4,2915.4,2983.5,2999.5
+Primates,Hominidae,Homo sapiens,Human,1105.6,1235.6,,1477.8,1580.8,1619.8,2115.1,,2869.4,2885.4,2957.5,2973.5
+Carnivora,Hyaenidae,Hyaena hyaena,Striped hyena,1105.6,1207.6,1223.6,1453.7,1566.8,1639.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Primates,Hylobatidae,Hylobates moloch,Silvery gibbon,1105.6,1219.7,1235.6,1477.8,1580.8,1619.8,2115.1,,2883.4,2899.4,2957.5,2973.5
+Rodentia,Sciuridae,Ictidomys tridecemlineatus,Thirteen-lined ground squirrel,1105.6,1177.6,1193.6,1453.7,1578.8,1619.8,2143.2,,2883.4,2899.4,2967.5,2983.5
+Rodentia,Dipodidae,Jaculus jaculus,Lesser Egyptian jerboa,1105.6,1152.6,1168.6,1453.7,1552.7,1594.8,2159.1,,2883.4,2899.4,2983.5,2999.5
+Artiodactyla,Physeteridae,Kogia breviceps,Pygmy sperm whale,1093.6,1189.6,1205.6,1453.7,1580.8,1682.8,2133.1,,2883.4,2899.4,3023.5,3039.5
+Artiodactyla,Delphinidae,Lagenorhynchus obliquidens,Pacific white-sided dolphin,1079.6,1189.6,1205.6,1453.7,1566.8,1638.8,2119.1,,2883.4,2899.4,3007.5,3023.5
+Primates,Lemuridae,Lemur catta,Ring-tailed lemur,1105.6,1205.6,1221.6,1455.8,1580.8,1606.8,2131.1,,2857.4,2873.4,2973.5,2989.5
+Carnivora,Felidae,Leopardus geoffroyi,Geoffroy's cat,1105.6,1207.6,1223.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Lagomorpha,Leporidae,Lepus europaeus,European hare,1105.6,1205.6,1221.6,1453.7,1550.8,1592.8,2129.1,,2883.4,2899.4,2957.5,2973.5
+Carnivora,Mustelidae,Lontra canadensis,River otter,1105.6,1219.7,1235.6,1453.7,1594.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Proboscidea,Elephantidae,Loxodonta africana,African elephant,1105.6,1145.6,1161.6,1453.7,1579.8,1540.7,2115.1,,2853.4,2869.4,2999.5,3015.5
+Carnivora,Mustelidae,Lutra lutra,European river otter,1105.6,1219.7,1235.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2973.5,2989.5
+Carnivora,Felidae,Lynx canadensis,Canada lynx,1105.6,1207.6,1223.6,1453.7,1566.8,1593.8,2163.1,,2853.4,2869.4,2983.5,2999.5
+Carnivora,Felidae,Lynx rufus,Bobcat,1105.6,1207.6,1223.6,1453.7,1566.8,1593.8,2163.1,,2853.4,2869.4,2983.5,2999.5
+Primates,Cercopithecidae,Macaca fascicularis,Crab-eating macaque,1105.6,1219.7,1235.6,1427.7,1580.8,1619.8,2143.2,,2883.4,2899.4,2957.5,2973.5
+Primates,Cercopithecidae,Macaca mulatta,Rhesus macaque,1105.6,1219.7,1235.6,1427.7,1580.8,1647.8,2143.2,,2883.4,2899.4,2957.5,2973.5
+Primates,Cercopithecidae,Macaca nemestrina,Pig-tailed macaque,1105.6,1219.7,1235.6,1427.7,1580.8,1619.8,2143.2,,2883.4,2899.4,2957.5,2973.5
+Primates,Cercopithecidae,Macaca thibetana thibetana,Macaca thibetana thibetana,1105.6,1219.7,1235.6,1427.7,1580.8,1619.8,2143.2,,2883.4,2899.4,2957.5,2973.5
+Primates,Cercopithecidae,Mandrillus leucophaeus,Drill,1105.6,1219.7,1235.6,1413.7,1580.8,1619.8,2129.1,,2883.4,2899.4,2957.5,2973.5
+Pholidota,Manidae,Manis javanica,Malayan pangolin,1105.6,1205.6,1221.6,1453.7,1566.8,1582.7,2145.1,,2857.4,2873.4,2973.5,2989.5
+Pholidota,Manidae,Manis pentadactyla,Chinese pangolin,1105.6,1205.6,1221.6,1453.7,1566.8,1582.7,2131.1,,2857.4,2873.4,2973.5,2989.5
+Rodentia,Sciuridae,Marmota flaviventris,Yellow-bellied marmot,1105.6,1177.6,1193.6,1453.7,1578.8,1619.8,2143.2,,2883.4,2899.4,2983.5,2999.5
+Rodentia,Sciuridae,Marmota marmota marmota,Alpine marmot,1105.6,1177.6,1193.6,1453.7,1578.8,1619.8,2143.2,,2883.4,2899.4,2983.5,2999.5
+Rodentia,Sciuridae,Marmota monax,Woodchuck,1105.6,1177.6,1193.6,1453.7,1578.8,1619.8,2143.2,,2883.4,2899.4,2983.5,2999.5
+Rodentia,Muridae,Mastomys coucha,Southern multimammate mouse,1105.6,1187.6,1203.6,1453.7,1566.8,1592.8,2143.2,,2925.4,2941.4,2957.5,2973.5
+Carnivora,Mustelidae,Meles meles,Eurasian badger,1105.6,1219.7,1235.6,1453.7,1566.8,1639.8,2147.1,,2853.4,2869.4,2957.5,2973.5
+Rodentia,Muridae,Meriones unguiculatus,Mongolian jird,1105.6,1187.6,1203.6,1453.7,1566.8,1582.7,2145.1,,2857.4,2873.4,2987.5,3003.5
+Rodentia,Cricetidae,Mesocricetus auratus,Golden hamster,1105.6,1187.6,1203.6,1453.7,1566.8,1578.8,2129.1,,2883.4,2899.4,3033.5,3049.5
+Artiodactyla,Ziphiidae,Mesoplodon densirostris,Blainville's beaked whale,1063.6,1189.6,1205.6,1441.7,1550.8,1654.8,2119.1,,2883.4,2899.4,3007.5,3023.5
+Primates,Cheirogaleidae,Microcebus murinus,Gray mouse lemur,1105.6,1205.6,1221.6,1427.7,1580.8,1619.8,2131.1,,2883.4,2899.4,2973.5,2989.5
+Rodentia,Cricetidae,Microtus ochrogaster,Prairie vole,1105.6,1187.6,1203.6,1453.7,1552.7,1592.8,2129.1,,2883.4,2899.4,3043.5,3059.5
+Rodentia,Cricetidae,Microtus oregoni,Creeping vole,1105.6,1177.6,1193.6,1453.7,1552.7,1592.8,2129.1,,2883.4,2899.4,3043.5,3059.5
+Chiroptera,Vespertilionidae,Miniopterus natalensis,Natal long-fingered bat,1105.6,1230.7,1246.7,1453.7,1568.7,1548.8,2225.1,,2883.4,2899.4,2953.5,2969.5
+Carnivora,Phocidae,Mirounga angustirostris,Northern elephant seal,1105.6,1205.6,1221.6,1453.7,1566.8,1639.8,2171.1,,2853.4,,2957.5,
+Carnivora,Phocidae,Mirounga leonina,Southern elephant seal,1105.6,1205.6,1221.6,1453.7,1566.8,1639.8,2171.1,,2853.4,,2957.5,
+Chiroptera,Molossidae,Molossus molossus,Pallas' mastiff bat,1105.6,1230.7,1246.7,1453.7,1594.8,1520.8,2161.1,,2883.4,2899.4,2983.5,2999.5
+Artiodactyla,Monodontidae,Monodon monoceros,Narwhal,1079.6,1189.6,1205.6,1443.7,1550.8,1652.8,2089.1,,2883.4,2899.4,3051.5,3067.5
+Artiodactyla,Moschidae,Moschus berezovskii,Chinese forest musk deer,1105.6,1180.6,1196.6,1427.7,1580.8,1648.8,2131.1,,2883.4,2899.4,3017.5,3033.5
+Rodentia,Muridae,Mus caroli,Ryukyu mouse,1105.6,1187.6,1203.6,1453.7,1570.7,1566.8,2159.1,,2925.4,2941.4,2987.5,3003.5
+Rodentia,Muridae,Mus musculus,Mouse,1105.6,1178.6,1194.6,1453.7,1570.7,1566.8,2159.1,,2895.4,2911.4,2931.5,2947.5
+Carnivora,Mustelidae,Mustela erminea,Ermine,1105.6,1219.7,1235.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Carnivora,Mustelidae,Mustela lutreola,European mink,1105.6,1219.7,1235.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Carnivora,Mustelidae,Mustela nigripes,Black-footed ferret,1105.6,1219.7,1235.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Carnivora,Mustelidae,Mustela putorius furo,European domestic ferret,1105.6,1219.7,1235.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Rodentia,Cricetidae,Myodes glareolus,Bank vole,1105.6,1187.6,1203.6,1453.7,1552.7,1592.8,2129.1,,2883.4,2899.4,3043.5,3059.5
+Chiroptera,Vespertilionidae,Myotis daubentonii,Daubenton's bat,1105.6,1230.7,1246.7,1453.7,1594.8,1548.8,2147.1,,2883.4,2899.4,2953.5,2969.5
+Chiroptera,Vespertilionidae,Myotis lucifugus,Little brown bat,1105.6,1230.7,1246.7,1453.7,1594.8,1548.8,2147.1,,2883.4,2899.4,2953.5,2969.5
+Chiroptera,Vespertilionidae,Myotis myotis,Greater mouse-eared bat,1105.6,1230.7,1246.7,1453.7,1594.8,1548.8,2147.1,,2883.4,2899.4,2953.5,2969.5
+Rodentia,Spalacidae,Nannospalax galili,Northern Israeli blind subterranean mole rat,1105.6,1161.6,1177.6,1453.7,1566.8,1596.8,2143.2,,2867.4,2883.4,3031.5,3047.5
+Carnivora,Felidae,Neofelis nebulosa,Clouded leopard,1105.6,1207.6,1223.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Carnivora,Phocidae,Neomonachus schauinslandi,Hawaiian monk seal,1105.6,1245.6,1261.6,1453.7,1566.8,1639.8,2171.1,,2853.4,2869.4,2957.5,2973.5
+Artiodactyla,Phocoenidae,Neophocaena asiaeorientalis asiaeorientalis,Yangtze finless porpoise,1079.6,1189.6,1205.6,1453.7,1550.8,1652.8,2119.1,,2883.4,2899.4,3007.5,3023.5
+Carnivora,Mustelidae,Neovison vison,American mink,1105.6,1219.7,1235.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Primates,Hylobatidae,Nomascus leucogenys,Northern white-cheeked gibbon,1105.6,1219.7,1235.6,1477.8,1580.8,1619.8,2115.1,,2883.4,2899.4,2957.5,2973.5
+Carnivora,Canidae,Nyctereutes procyonoides,Raccoon dog,1105.6,1210.7,1226.6,1453.7,1566.8,1593.8,2145.1,,2853.4,2869.4,2943.5,2959.5
+Primates,Lorisidae,Nycticebus coucang,Slow loris,1105.6,1191.6,1207.6,1477.8,1566.8,1583.7,2117.1,,2869.4,2885.4,2957.5,2973.5
+Lagomorpha,Ochotonidae,Ochotona curzoniae,Black-lipped pika,1105.6,1191.6,1207.6,1427.7,1576.8,1622.8,2129.1,,2883.4,2899.4,3023.5,3039.5
+Lagomorpha,Ochotonidae,Ochotona princeps,Southern American pika,1105.6,1191.6,1207.6,1427.7,1576.8,1622.8,2147.1,,2883.4,2899.4,2997.5,3013.5
+Rodentia,Octodontidae,Octodon degus,Degu,1105.6,1145.6,1161.6,1427.7,1594.8,1637.8,2133.1,,2883.4,2899.4,2983.5,2999.5
+Carnivora,Odobenidae,Odobenus rosmarus divergens,Pacific walrus,1105.6,1205.6,1221.6,1453.7,1566.8,1639.8,2121.1,,2853.4,2869.4,3003.5,3019.5
+Artiodactyla,Cervidae,Odocoileus virginianus texanus,Odocoileus virginianus texanus,1105.6,1180.6,1196.6,1427.7,1580.8,1648.8,2131.1,,2883.4,2899.4,3043.5,3059.5
+Rodentia,Cricetidae,Onychomys torridus,Southern grasshopper mouse,1105.6,1187.6,1203.6,1468.8,1552.7,1578.8,2143.2,,2883.4,2899.4,3017.5,3033.5
+Artiodactyla,Delphinidae,Orcinus orca,Killer whale,1079.6,1189.6,1205.6,1453.7,1566.8,1652.8,2119.1,,2883.4,2899.4,3007.5,3023.5
+Tubulidentata,Orycteropodidae,Orycteropus afer afer,Orycteropus afer afer,1105.6,1161.6,1177.6,1463.7,1595.8,1647.8,2105.1,,2896.4,2912.4,2969.5,2985.5
+Lagomorpha,Leporidae,Oryctolagus cuniculus,Rabbit,1105.6,1205.6,1221.6,1453.7,1550.8,1592.8,2129.1,,2883.4,2899.4,2957.5,2973.5
+Artiodactyla,Bovidae,Oryx dammah,Scimitar-horned oryx,1105.6,1180.6,1196.6,1427.7,1580.8,1648.8,2131.1,,2883.4,2899.4,3043.5,3059.5
+Primates,Galagidae,Otolemur garnettii,Small-eared galago,1105.6,1218.6,1234.6,1477.8,1566.8,1625.8,2101.1,,2869.4,2885.4,2927.5,2943.5
+Artiodactyla,Bovidae,Ovis aries,Sheep,1105.6,1180.6,1196.6,1427.7,1580.8,1648.8,2131.1,,2883.4,2899.4,3017.5,3033.5
+Primates,Hominidae,Pan paniscus,Pygmy chimpanzee,1105.6,1219.7,1235.6,1477.8,1580.8,1619.8,2115.1,,2869.4,2885.4,2957.5,2973.5
+Primates,Hominidae,Pan troglodytes,Chimpanzee,1105.6,1219.7,1235.6,1477.8,1580.8,1619.8,2115.1,,2869.4,2885.4,2957.5,2973.5
+Carnivora,Felidae,Panthera leo,Lion,1105.6,1207.6,1223.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Carnivora,Felidae,Panthera onca,Jaguar,1105.6,1207.6,1223.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Carnivora,Felidae,Panthera pardus,Leopard,1105.6,1207.6,1223.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Carnivora,Felidae,Panthera tigris,Tiger,1105.6,1207.6,1223.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Carnivora,Felidae,Panthera uncia,Snow leopard,1105.6,1207.6,1223.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Primates,Cercopithecidae,Papio anubis,Olive baboon,1105.6,1219.7,1235.6,1413.7,1580.8,1619.8,2129.1,,2883.4,2899.4,2957.5,2973.5
+Rodentia,Heteromyidae,Perognathus longimembris pacificus,Pacific pocket mouse,1105.6,1161.6,1177.6,1453.7,1566.8,1609.8,2175.1,,2911.4,2927.4,2983.5,2999.5
+Rodentia,Cricetidae,Peromyscus californicus insignis,Peromyscus californicus insignis,1105.6,1187.6,1203.6,1468.8,1552.7,1578.8,2143.2,,2883.4,2899.4,3017.5,3033.5
+Rodentia,Cricetidae,Peromyscus leucopus,White-footed mouse,1105.6,1187.6,1203.6,1468.8,1552.7,1578.8,2143.2,,2883.4,2899.4,3017.5,3033.5
+Rodentia,Cricetidae,Peromyscus maniculatus bairdii,Prairie deer mouse,1105.6,1187.6,1203.6,1468.8,1552.7,1578.8,2143.2,,2883.4,2899.4,3017.5,3033.5
+Carnivora,Phocidae,Phoca vitulina,Harbor seal,1105.6,1205.6,1221.6,1453.7,1566.8,1639.8,2171.1,,2869.4,2885.4,2957.5,2973.5
+Artiodactyla,Phocoenidae,Phocoena sinus,Vaquita,1079.6,1189.6,1205.6,1453.7,1550.8,1652.8,2119.1,,2883.4,2899.4,3007.5,3023.5
+Rodentia,Cricetidae,Phodopus roborovskii,Roborovski's desert hamster,1105.6,1187.6,1203.6,1453.7,1566.8,1578.8,2129.1,,2883.4,2899.4,3029.5,3045.5
+Chiroptera,Phyllostomidae,Phyllostomus hastatus,Greater spear-nosed bat,1105.6,1205.6,1221.6,1453.7,1608.8,1591.8,2119.1,,2869.4,2885.4,2957.5,2973.5
+Artiodactyla,Physeteridae,Physeter catodon,Sperm whale,1079.6,1189.6,1205.6,1453.7,1550.8,1652.8,2133.1,,2883.4,2899.4,3023.5,3039.5
+Primates,Cercopithecidae,Piliocolobus tephrosceles,Ugandan red Colobus,1105.6,1219.7,1235.6,1451.7,1580.8,1619.8,2115.1,,2883.4,2899.4,2957.5,2973.5
+Primates,Hominidae,Pongo pygmaeus,Bornean orangutan,1105.6,1219.7,1235.6,1477.8,1580.8,1619.8,2115.1,,2883.4,2899.4,2957.5,2973.5
+Carnivora,Felidae,Prionailurus viverrinus,Fishing cat,1105.6,1207.6,1223.6,1453.7,1566.8,1593.8,2147.1,,2853.4,2869.4,2983.5,2999.5
+Primates,Indriidae,Propithecus coquereli,Coquerel's sifaka,1105.6,1205.6,1221.6,1455.8,1580.8,1609.8,2131.1,,2883.4,2899.4,2973.5,2989.5
+Rodentia,Muridae,Psammomys obesus,Fat sand rat,1105.6,1187.6,1203.6,1453.7,1566.8,1592.8,2145.1,,2857.4,2873.4,2957.5,2973.5
+Chiroptera,Mormoopidae,Pteronotus parnellii mesoamericanus,Pteronotus parnellii mesoamericanus,1105.6,1232.6,1248.6,1453.7,1594.8,1561.8,2103.1,,2883.4,2899.4,2957.5,2973.5
+Chiroptera,Pteropodidae,Pteropus alecto,Black flying fox,1105.6,1219.7,1235.6,1453.7,1594.8,1609.8,2131.1,,2869.4,2885.4,2983.5,2999.5
+Chiroptera,Pteropodidae,Pteropus giganteus,Indian flying fox,1105.6,1219.7,1235.6,1453.7,1594.8,1609.8,2131.1,,2869.4,2885.4,2983.5,2999.5
+Rodentia,Muridae,Rattus norvegicus,Rat,1105.6,1187.6,1203.6,1453.7,1566.8,1592.8,2143.2,,2883.4,2899.4,2987.5,3003.5
+Rodentia,Muridae,Rattus rattus,Black rat,1105.6,1187.6,1203.6,1453.7,1566.8,1592.8,2143.2,,2883.4,2899.4,2957.5,2973.5
+Chiroptera,Rhinolophidae,Rhinolophus sinicus,Chinese rufous horseshoe bat,1105.6,1219.7,1235.6,1453.7,1594.8,1596.8,2163.1,,2883.4,2899.4,2983.5,2999.5
+Primates,Cercopithecidae,Rhinopithecus bieti,Black snub-nosed monkey,1105.6,1219.7,1235.6,1451.7,1580.8,1619.8,2115.1,,2883.4,2899.4,2957.5,2973.5
+Primates,Cercopithecidae,Rhinopithecus roxellana,Golden snub-nosed monkey,1105.6,1219.7,1235.6,1451.7,1580.8,1619.8,2115.1,,2883.4,2899.4,2957.5,2973.5
+Chiroptera,Pteropodidae,Rousettus aegyptiacus,Egyptian rousette,1105.6,1219.7,1235.6,1453.7,1594.8,1619.8,2131.1,,2869.4,2885.4,2983.5,2999.5
+Primates,Cebidae,Saimiri boliviensis boliviensis,Bolivian squirrel monkey,1105.6,1219.7,1235.6,1439.7,1550.8,1619.8,2129.1,,2883.4,2899.4,2957.5,2973.5
+Primates,Cebidae,Sapajus apella,Brown-capped capuchin,1091.6,1219.7,1235.6,1453.7,1580.8,1619.8,2129.1,,2869.4,2885.4,2957.5,2973.5
+Rodentia,Sciuridae,Sciurus carolinensis,Eastern gray squirrel,1105.6,1191.6,1207.6,1453.7,1578.8,1609.8,2143.2,,2883.4,2899.4,2983.5,2999.5
+Eulipotyphla,Soricidae,Sorex araneus,Eurasian common shrew,1105.6,1205.6,1221.6,1453.7,1550.8,1680.8,2145.1,,2869.4,2885.4,3010.5,3026.5
+Eulipotyphla,Soricidae,Sorex fumeus,Smoky shrew,1105.6,1232.6,1248.6,1453.7,1550.8,1654.8,2145.1,,2869.4,2885.4,3010.5,3026.5
+Chiroptera,Phyllostomidae,Sturnira hondurensis,Sturnira hondurensis,1105.6,1205.6,1221.6,1453.7,1608.8,1578.8,2119.1,,2883.4,2899.4,2957.5,2973.5
+Eulipotyphla,Soricidae,Suncus etruscus,Etruscan shrew,1105.6,1210.7,1226.6,1453.7,1565.8,1650.8,2175.1,,2869.4,2885.4,3043.5,3059.5
+Carnivora,Herpestidae,Suricata suricatta,Meerkat,1105.6,1207.6,1223.6,1427.7,1566.8,1593.8,2163.1,,2853.4,2869.4,2957.5,2973.5
+Artiodactyla,Suidae,Sus scrofa,Pig,1105.6,1180.6,1196.6,1453.7,1550.8,1647.8,2131.1,,2883.4,2899.4,3017.5,3033.5
+Primates,Hylobatidae,Symphalangus syndactylus,Siamang,1105.6,1219.7,1235.6,1477.8,1580.8,1619.8,2115.1,,2883.4,2899.4,2957.5,2973.5
+Eulipotyphla,Talpidae,Talpa occidentalis,Iberian mole,1105.6,1205.6,1221.6,1453.7,1566.8,1684.8,2209.1,,2869.4,2885.4,2969.5,2985.5
+Primates,Cercopithecidae,Theropithecus gelada,Gelada baboon,1105.6,1219.7,1235.6,1427.7,1580.8,1619.8,2129.1,,2883.4,2899.4,2957.5,2973.5
+Primates,Cercopithecidae,Trachypithecus francoisi,Francois' leaf monkey,1105.6,1219.7,1235.6,1451.7,1580.8,1619.8,2115.1,,2883.4,2899.4,2957.5,2973.5
+Scandentia,Tupaiidae,Tupaia chinensis,Chinese tree shrew,1105.6,1217.7,1233.7,1453.7,1593.8,1619.8,2129.1,,2883.4,2899.4,2943.5,2959.5
+Artiodactyla,Delphinidae,Tursiops truncatus,Atlantic bottle-nosed dolphin,1079.6,1189.6,1205.6,1453.7,1566.8,1638.8,2119.1,,2883.4,2899.4,3007.5,3023.5
+Rodentia,Sciuridae,Urocitellus parryii,Arctic ground squirrel,1105.6,1177.6,1193.6,1453.7,1578.8,1619.8,2143.2,,2883.4,2899.4,2967.5,2983.5
+Carnivora,Ursidae,Ursus arctos,Brown bear,1105.6,1217.7,1233.7,1453.7,1566.8,1593.8,2163.1,,2853.4,2869.4,2957.5,2973.5
+Carnivora,Ursidae,Ursus maritimus,Polar bear,1105.6,1217.7,1233.7,1453.7,1566.8,1593.8,2163.1,,2853.4,2869.4,2957.5,2973.5
+Artiodactyla,Camelidae,Vicugna pacos,Alpaca,1105.6,1205.6,1221.6,1453.7,1550.8,1634.8,2131.1,,2883.4,2899.4,3017.5,3033.5
+Carnivora,Canidae,Vulpes lagopus,Arctic fox,1105.6,1210.7,1226.6,1453.7,1566.8,1593.8,2131.1,,2853.4,2869.4,2983.5,2999.5
+Carnivora,Canidae,Vulpes vulpes,Red fox,1105.6,1210.7,1226.6,1437.7,1566.8,1593.8,2131.1,,2853.4,2869.4,2983.5,2999.5
+Carnivora,Otariidae,Zalophus californianus,California sealion,1105.6,1205.6,1221.6,1453.7,1566.8,1639.8,2121.1,,2853.4,2869.4,2957.5,2973.5

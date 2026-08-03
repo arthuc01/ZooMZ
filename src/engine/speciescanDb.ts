@@ -1,6 +1,7 @@
 import { uid } from "../utils/id";
 import type { Contaminant, DbManifest, RefMarker, RefTaxon, SpeciescanDb } from "./types";
 import { parseCsv, toNumberMaybe } from "./csv";
+import { roundHalfEven } from "./rounding";
 
 // Build a reference DB URL relative to the app root.
 function refDbUrl(path: string): string {
@@ -14,11 +15,14 @@ export async function loadManifest(): Promise<DbManifest> {
   return (await res.json()) as DbManifest;
 }
 
-// Load a Speciescan-style CSV and map it to internal DB structures.
-export async function loadSpeciescanDb(label: string, file: string): Promise<SpeciescanDb> {
-  const res = await fetch(refDbUrl(file));
-  if (!res.ok) throw new Error(`Failed to load reference DB: ${file}`);
-  const text = await res.text();
+export function parseSpeciescanDbCsv(
+  label: string,
+  file: string,
+  text: string,
+  opts: { roundMarkerMzs?: boolean; collapseDuplicateLabels?: boolean } = {}
+): SpeciescanDb {
+  const roundMarkerMzs = opts.roundMarkerMzs ?? true;
+  const collapseDuplicateLabels = opts.collapseDuplicateLabels ?? true;
   const table = parseCsv(text);
   if (table.length < 2) throw new Error(`Reference DB ${file} looks empty`);
 
@@ -35,32 +39,60 @@ export async function loadSpeciescanDb(label: string, file: string): Promise<Spe
   for (let c = startIdx; c < header.length; c++) markerCols.push(c);
   const markerNames = markerCols.map(c => header[c]).filter(Boolean);
 
-  const taxa: RefTaxon[] = rows.map(r => {
+  const taxaByLabel = new Map<string, RefTaxon>();
+  const markerKeySets = new Map<string, Set<string>>();
+
+  for (const [rowIndex, r] of rows.entries()) {
     const order = idxOrder >= 0 ? (r[idxOrder] ?? "").trim() : undefined;
     const family = idxFamily >= 0 ? (r[idxFamily] ?? "").trim() : undefined;
     const species = idxSpecies >= 0 ? (r[idxSpecies] ?? "").trim() : undefined;
     const zoomsTaxon = idxTaxon >= 0 ? (r[idxTaxon] ?? "").trim() : "";
 
-    const label2 = zoomsTaxon || species || "Unknown";
+    const label2 = collapseDuplicateLabels ? zoomsTaxon : `${zoomsTaxon}__row${rowIndex}`;
 
-    const markers: RefMarker[] = [];
-    for (const col of markerCols) {
-      const v = toNumberMaybe(r[col] ?? "");
-      if (v !== null) markers.push({ name: header[col], mz: v });
+    if (!taxaByLabel.has(label2)) {
+      taxaByLabel.set(label2, {
+        id: uid("taxon"),
+        label: zoomsTaxon,
+        species,
+        family,
+        order,
+        markers: [],
+      });
+      markerKeySets.set(label2, new Set<string>());
     }
 
-    return { id: uid("taxon"), label: label2, species, family, order, markers };
-  });
+    const taxon = taxaByLabel.get(label2)!;
+    const markerKeys = markerKeySets.get(label2)!;
+    for (const col of markerCols) {
+      const v = toNumberMaybe(r[col] ?? "");
+      if (v === null) continue;
+      const markerMz = roundMarkerMzs ? roundHalfEven(v, 1) : v;
+      const marker: RefMarker = { name: header[col], mz: markerMz };
+      const key = `${marker.mz}`;
+      if (markerKeys.has(key)) continue;
+      markerKeys.add(key);
+      taxon.markers.push(marker);
+    }
+  }
+
+  const taxa = Array.from(taxaByLabel.values());
+  for (const taxon of taxa) {
+    taxon.markers.sort((a, b) => a.mz - b.mz);
+  }
 
   return { meta: { label, file }, taxa, markerNames };
 }
 
-// Load the contaminants list CSV, returning empty when missing.
-export async function loadContaminants(file: string): Promise<Contaminant[]> {
-  // Load contaminants list; fall back to empty if missing.
+// Load a Speciescan-style CSV and map it to internal DB structures.
+export async function loadSpeciescanDb(label: string, file: string): Promise<SpeciescanDb> {
   const res = await fetch(refDbUrl(file));
-  if (!res.ok) return [];
+  if (!res.ok) throw new Error(`Failed to load reference DB: ${file}`);
   const text = await res.text();
+  return parseSpeciescanDbCsv(label, file, text);
+}
+
+export function parseContaminantsCsv(text: string): Contaminant[] {
   const table = parseCsv(text);
   if (table.length < 2) return [];
 
@@ -90,4 +122,13 @@ export async function loadContaminants(file: string): Promise<Contaminant[]> {
     }
   }
   return out;
+}
+
+// Load the contaminants list CSV, returning empty when missing.
+export async function loadContaminants(file: string): Promise<Contaminant[]> {
+  // Load contaminants list; fall back to empty if missing.
+  const res = await fetch(refDbUrl(file));
+  if (!res.ok) return [];
+  const text = await res.text();
+  return parseContaminantsCsv(text);
 }

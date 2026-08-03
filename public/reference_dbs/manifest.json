@@ -34,6 +34,18 @@
       "file": "Xenarthrans_reference_db.csv"
     },
     {
+      "label": "PAMPA - Birds (Touzet 2025)",
+      "file": "Birds_PAMPA_reference_db.csv"
+    },
+    {
+      "label": "PAMPA - Mammals (Touzet 2025)",
+      "file": "Mammals_PAMPA_reference_db.csv"
+    },
+    {
+      "label": "PAMPA - Placentals (Touzet 2025)",
+      "file": "Placentals_PAMPA_reference_db.csv"
+    },
+    {
       "label": "In silico (Expt)",
       "file": "speciescan_in_silico_markers_ZooMS_taxon.csv"
     }

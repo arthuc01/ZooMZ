@@ -1,1 +1,30 @@
 node_modules/
+dist/
+validation/
+*.tsbuildinfo
+.DS_Store
+
+# PAMPA source - not shipped, used only to generate Mammals_PAMPA_reference_db.csv
+pampa-main/
+pampa-main.zip
+
+# SpecieScan source + data - not shipped, used only for benchmarking validation
+SpecieScan/
+SpecieScan-main/
+SpecieScan.zip
+SpecieScan-main.zip
+
+# Paper folder - manuscript, figures, analysis code/data - kept local, not shipped
+Paper/
+
+# Local working data and drafts not needed in the app repo
+7469803/
+AfriZooMS Paper ZambiZooMS Spectra/
+Sequences/
+zooms_paper Copy.Data/
+zooms_paper Copy.enl
+FDR_MATH_NOTES.md
+ZooMZ_manuscript_draft.docx
+ZooMZ_paper_sketch.md
+ZooMZ_references.bib
+codex.md
